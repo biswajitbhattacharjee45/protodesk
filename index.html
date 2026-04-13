@@ -576,6 +576,15 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 @media(max-width:440px){.kpi-strip{grid-template-columns:repeat(2,1fr);}
   .ev-cap{display:none;}
 }
+
+/* Fullscreen photo viewer */
+.photo-viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;cursor:zoom-out;}
+.photo-viewer.open{display:flex;}
+.photo-viewer img{max-width:92vw;max-height:82vh;border-radius:12px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,.6);}
+.photo-viewer-name{color:rgba(255,255,255,.8);font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;margin-top:.85rem;text-align:center;}
+.photo-viewer-close{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;width:34px;height:34px;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.photo-viewer-hint{font-size:.62rem;color:rgba(255,255,255,.35);margin-top:.4rem;}
+.dr-ban-img{cursor:zoom-in;}
 </style>
 </head>
 <body>
@@ -1547,7 +1556,16 @@ function openDrw(key){
   document.getElementById('drSl').textContent='#'+String(g.sl||0).padStart(2,'0');
   const drInit=document.getElementById('drInit');drInit.textContent=ini(g.name);drInit.style.display='flex';
   const img=document.getElementById('drPic');img.style.display='none';
-  function showDrwPhoto(src){img.src=src;img.onload=()=>{img.style.display='block';img.classList.add('pfade');drInit.style.display='none';};}
+  function showDrwPhoto(src){
+    img.src=src;
+    img.onload=()=>{
+      img.style.display='block';
+      img.classList.add('pfade');
+      drInit.style.display='none';
+    };
+    img.onclick=(e)=>{e.stopPropagation();openPhotoViewer(src,g.name);};
+    img.title='Tap to view full image';
+  }
   if(g.photoUrl){showDrwPhoto(g.photoUrl);}
   else if(g.wk)getPhoto(g.wk).then(src=>{if(src)showDrwPhoto(src);});
   document.getElementById('drName').innerHTML=g.name+(g.companion?'<span class="ctag" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.25)">+1</span>':'');
@@ -1805,6 +1823,28 @@ function showFieldMessage(text,from){
 ══════════════════════════════════════════════════ */
 let _tt;
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2800);}
+
+/* ── FULLSCREEN PHOTO VIEWER ── */
+function openPhotoViewer(src, name){
+  document.getElementById('photoViewerImg').src=src;
+  document.getElementById('photoViewerName').textContent=name||'';
+  document.getElementById('photoViewer').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closePhotoViewer(){
+  document.getElementById('photoViewer').classList.remove('open');
+  document.getElementById('photoViewerImg').src='';
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePhotoViewer();});
 </script>
+
+<!-- Fullscreen photo viewer -->
+<div class="photo-viewer" id="photoViewer" onclick="closePhotoViewer()">
+  <button class="photo-viewer-close" onclick="closePhotoViewer()">✕</button>
+  <img id="photoViewerImg" src="" alt="">
+  <div class="photo-viewer-name" id="photoViewerName"></div>
+  <div class="photo-viewer-hint">Tap anywhere to close</div>
+</div>
 </body>
 </html>
