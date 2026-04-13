@@ -267,20 +267,23 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 .drw-bg.open{display:block;}
 .drw{position:fixed;top:0;right:-100%;bottom:0;width:min(480px,100vw);background:var(--surface);z-index:901;overflow-y:auto;transition:right .3s cubic-bezier(.4,0,.2,1);box-shadow:-8px 0 40px rgba(0,0,0,.25);}
 .drw.open{right:0;}
-.dr-ban{height:100px;position:relative;background:linear-gradient(135deg,#0b1d3a,#1e3f73,#0a6080);}
-.dr-close{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.dr-sl{position:absolute;top:8px;left:10px;font-size:.5rem;font-weight:800;color:rgba(255,255,255,.55);font-family:'DM Mono',monospace;}
-.dr-pw{position:absolute;bottom:-30px;left:16px;width:60px;height:60px;}
-.dr-ph{width:60px;height:60px;border-radius:50%;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#1e3f73,#059669);}
-.dr-pic{width:60px;height:60px;border-radius:50%;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.25);object-fit:cover;position:absolute;top:0;left:0;display:none;}
-.dr-sbadge{position:absolute;bottom:8px;right:10px;border-radius:20px;padding:2px 8px;font-size:.55rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border:1px solid;}
-.dr-sbadge.arr{background:rgba(22,163,74,.15);color:var(--green);border-color:var(--gbd);}
-.dr-sbadge.dep{background:rgba(37,99,235,.15);color:var(--blue);border-color:var(--bbd);}
-.dr-sbadge.pend{background:rgba(245,158,11,.15);color:#b45309;border-color:#fde68a;}
-.dr-sbadge.nos{background:rgba(220,38,38,.15);color:var(--red);border-color:#fecaca;}
-.dr-sbadge.none{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.15);}
-.dr-info{padding:36px 1.1rem .85rem;}
-.dr-name{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:2px;}
+.dr-ban{height:200px;position:relative;background:linear-gradient(135deg,#0b1d3a,#1e3f73,#0a6080);overflow:hidden;flex-shrink:0;}
+.dr-ban-img{width:100%;height:100%;object-fit:cover;object-position:top center;display:none;position:absolute;inset:0;}
+.dr-ban-init{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:3.8rem;font-weight:700;color:rgba(255,255,255,.25);}
+.dr-ban-fade{position:absolute;bottom:0;left:0;right:0;height:90px;background:linear-gradient(to bottom,transparent,rgba(11,29,58,.92));}
+.dr-close{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3;}
+.dr-sl{position:absolute;top:11px;left:12px;font-size:.5rem;font-weight:800;color:rgba(255,255,255,.6);font-family:'DM Mono',monospace;z-index:3;}
+.dr-name-over{position:absolute;bottom:10px;left:14px;right:90px;z-index:3;}
+.dr-name{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:2px;line-height:1.25;}
+.dr-desig-over{font-size:.62rem;color:rgba(255,255,255,.65);margin-top:1px;}
+.dr-sbadge{position:absolute;bottom:12px;right:12px;border-radius:20px;padding:3px 10px;font-size:.55rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border:1px solid;z-index:3;}
+.dr-sbadge.arr{background:rgba(22,163,74,.25);color:#4ade80;border-color:rgba(74,222,128,.4);}
+.dr-sbadge.dep{background:rgba(37,99,235,.25);color:#93c5fd;border-color:rgba(147,197,253,.4);}
+.dr-sbadge.pend{background:rgba(245,158,11,.25);color:#fde68a;border-color:rgba(253,230,138,.4);}
+.dr-sbadge.nos{background:rgba(220,38,38,.25);color:#fca5a5;border-color:rgba(252,165,165,.4);}
+.dr-sbadge.none{background:rgba(255,255,255,.1);color:rgba(255,255,255,.55);border-color:rgba(255,255,255,.2);}
+.dr-info{padding:.85rem 1.1rem .5rem;}
+.dr-name-desk{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:2px;display:none;}
 .dr-desig{font-size:.64rem;color:var(--ink3);margin-bottom:.45rem;}
 .dr-sec{padding:.65rem 1.1rem;border-top:1px solid var(--border);}
 .dr-sec-title{font-size:.52rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink4);margin-bottom:.45rem;}
@@ -777,13 +780,19 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 <!-- DRAWER -->
 <div class="drw-bg" id="drwBg" onclick="closeDrw()"></div>
 <div class="drw" id="drw">
-  <div class="dr-ban"><button class="dr-close" onclick="closeDrw()">✕</button><div class="dr-sl" id="drSl"></div>
-    <div class="dr-pw"><div class="dr-ph" id="drPh"></div><img class="dr-pic" id="drPic" alt=""></div>
+  <div class="dr-ban">
+    <button class="dr-close" onclick="closeDrw()">✕</button>
+    <div class="dr-sl" id="drSl"></div>
+    <div class="dr-ban-init" id="drInit"></div>
+    <img class="dr-ban-img" id="drPic" alt="">
+    <div class="dr-ban-fade"></div>
+    <div class="dr-name-over">
+      <div class="dr-name" id="drName"></div>
+      <div class="dr-desig-over" id="drDesig"></div>
+    </div>
     <div class="dr-sbadge none" id="drBadge">⬜ Awaiting</div>
   </div>
   <div class="dr-info">
-    <div class="dr-name" id="drName"></div>
-    <div class="dr-desig" id="drDesig"></div>
     <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.3rem">
       <a class="dr-wiki" id="drWiki" href="#" target="_blank" rel="noopener">📖 Wikipedia</a>
       <button class="dr-wiki" id="drEditBtn" style="display:none;border-color:#fde68a;background:#fffbeb;color:#b45309;cursor:pointer" onclick="editDrwGuest()">✏️ Edit</button>
@@ -1536,11 +1545,12 @@ function clearNotes(){if(!confirm('Clear all notes?'))return;window._notes={};if
 function openDrw(key){
   const g=window._guests[key];if(!g)return;_drKey=key;const s=gst(key);
   document.getElementById('drSl').textContent='#'+String(g.sl||0).padStart(2,'0');
-  const ph=document.getElementById('drPh');ph.textContent=ini(g.name);ph.style.display='flex';
+  const drInit=document.getElementById('drInit');drInit.textContent=ini(g.name);drInit.style.display='flex';
   const img=document.getElementById('drPic');img.style.display='none';
-  if(g.photoUrl){img.src=g.photoUrl;img.onload=()=>{img.style.display='block';img.classList.add('pfade');ph.style.display='none';};}
-  else if(g.wk)getPhoto(g.wk).then(src=>{if(src){img.src=src;img.onload=()=>{img.style.display='block';img.classList.add('pfade');ph.style.display='none';};}});
-  document.getElementById('drName').innerHTML=g.name+(g.companion?'<span class="ctag">+companion</span>':'');
+  function showDrwPhoto(src){img.src=src;img.onload=()=>{img.style.display='block';img.classList.add('pfade');drInit.style.display='none';};}
+  if(g.photoUrl){showDrwPhoto(g.photoUrl);}
+  else if(g.wk)getPhoto(g.wk).then(src=>{if(src)showDrwPhoto(src);});
+  document.getElementById('drName').innerHTML=g.name+(g.companion?'<span class="ctag" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.25)">+1</span>':'');
   document.getElementById('drDesig').textContent=[g.designation,g.party,g.state].filter(Boolean).join(' · ');
   const wi=document.getElementById('drWiki');if(g.wiki){wi.href=g.wiki;wi.style.display='inline-flex';}else{wi.style.display='none';}
   document.getElementById('drEditBtn').style.display=can('entry')?'inline-flex':'none';
