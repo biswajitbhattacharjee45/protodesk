@@ -224,19 +224,23 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 .gcard[data-st="pending"] .gc-st{background:linear-gradient(90deg,#f59e0b,#fde68a);}
 .gcard[data-st="no-show"] .gc-st{background:linear-gradient(90deg,#dc2626,#f87171);}
 .gcard:not([data-st]) .gc-st,.gcard[data-st="none"] .gc-st{background:var(--border);}
-.gc-ban{height:50px;position:relative;background:linear-gradient(135deg,#0b1d3a,#1e3f73,#0a6080);}
-.gc-sl{position:absolute;top:4px;left:6px;font-size:.44rem;font-weight:800;color:rgba(255,255,255,.6);font-family:'DM Mono',monospace;}
-.gc-dot{position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);}
-.gc-dot.arr{background:#4ade80;}.gc-dot.dep{background:#60a5fa;}.gc-dot.pend{background:#fde68a;}.gc-dot.nos{background:#f87171;}.gc-dot.none{background:rgba(255,255,255,.18);}
-.gc-pw{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);width:34px;height:34px;}
-.gc-ph{width:34px;height:34px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.7rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#1e3f73,#059669);}
-.gc-img{width:34px;height:34px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.22);object-fit:cover;position:absolute;top:0;left:0;display:none;}
-.gc-body{padding:20px .5rem .55rem;text-align:center;}
-.gc-name{font-size:.58rem;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.gc-photo{height:108px;position:relative;overflow:hidden;background:linear-gradient(135deg,#0b1d3a,#1e3f73,#0a6080);}
+.gc-photo-img{width:100%;height:100%;object-fit:cover;object-position:top center;display:none;}
+.gc-photo-init{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:rgba(255,255,255,.8);}
+.gc-photo-fade{position:absolute;bottom:0;left:0;right:0;height:36px;background:linear-gradient(to bottom,transparent,rgba(11,29,58,.6));}
+.gc-sl{position:absolute;top:5px;left:7px;font-size:.44rem;font-weight:800;color:rgba(255,255,255,.75);font-family:'DM Mono',monospace;z-index:2;}
+.gc-dot{position:absolute;top:6px;right:7px;width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(255,255,255,.5);z-index:2;}
+.gc-dot.arr{background:#4ade80;}.gc-dot.dep{background:#60a5fa;}.gc-dot.pend{background:#fde68a;}.gc-dot.nos{background:#f87171;}.gc-dot.none{background:rgba(255,255,255,.25);}
+.gc-body{padding:.48rem .5rem .52rem;text-align:center;}
+.gc-name{font-size:.6rem;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 .gc-cat{font-size:.48rem;color:var(--ink4);margin-bottom:.22rem;}
 .gc-slbl{font-size:.48rem;font-weight:800;padding:1px 5px;border-radius:4px;display:inline-block;}
 .gc-slbl.arr{background:var(--gbg);color:var(--green);}.gc-slbl.dep{background:var(--bbg);color:var(--blue);}.gc-slbl.pend{background:#fffbeb;color:#b45309;}.gc-slbl.nos{background:#fff1f2;color:var(--red);}.gc-slbl.none{background:var(--bg);color:var(--ink4);}
 .gc-room{font-size:.48rem;font-family:'DM Mono',monospace;color:var(--ink3);margin-top:2px;}
+.gc-ban{height:50px;position:relative;background:linear-gradient(135deg,#0b1d3a,#1e3f73,#0a6080);}
+.gc-pw{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);width:34px;height:34px;}
+.gc-ph{width:34px;height:34px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.7rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#1e3f73,#059669);}
+.gc-img{width:34px;height:34px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.22);object-fit:cover;position:absolute;top:0;left:0;display:none;}
 
 /* Search strip */
 .sstrip{background:var(--surface);border-radius:var(--r);padding:.65rem .85rem;box-shadow:var(--sh1);border:1px solid var(--border);display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-bottom:.8rem;}
@@ -1157,6 +1161,17 @@ function openGF(key=null){
       <div class="form-group"><label class="flabel">Contact</label><input class="finput" id="gf-contact" value="${v.contact||''}" type="tel"></div>
       <div class="form-group"><label class="flabel">Companion?</label><select class="fsel" id="gf-comp"><option value="">No companion</option><option value="1"${v.companion?' selected':''}>+1 companion</option></select></div>
       <div class="form-group"><label class="flabel">Wikipedia key (for photo)</label><input class="finput" id="gf-wk" value="${v.wk||''}" placeholder="e.g. Dola_Sen"></div>
+      <div class="form-group full"><label class="flabel">Upload Photo (will show on card)</label>
+        <div style="display:flex;align-items:center;gap:.65rem;flex-wrap:wrap">
+          <label style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;font-size:.72rem;font-weight:700;color:var(--ink2)">
+            📷 Choose Photo<input type="file" id="gf-photo" accept="image/*" style="display:none" onchange="previewGuestPhoto(this)">
+          </label>
+          <div id="gf-photo-preview" style="width:52px;height:52px;border-radius:8px;overflow:hidden;border:1.5px solid var(--border);display:${v.photoUrl?'block':'none'}">
+            <img id="gf-photo-img" src="${v.photoUrl||''}" style="width:100%;height:100%;object-fit:cover;object-position:top">
+          </div>
+          <span id="gf-photo-status" style="font-size:.65rem;color:var(--ink3)">${v.photoUrl?'Photo uploaded ✅':'No photo yet — Wikipedia key above works too'}</span>
+        </div>
+      </div>
     </div></div>
   <div class="form-section"><div class="form-section-title">✈ Arrival</div>
     <div class="frow3">
@@ -1191,11 +1206,31 @@ function openGF(key=null){
 }
 function closeGF(){document.getElementById('gfModal').classList.remove('open');_gfEditKey=null;}
 
+/* Photo upload helpers */
+const _photoCache={};
+function previewGuestPhoto(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const src=e.target.result;
+    const prev=document.getElementById('gf-photo-preview');
+    const img=document.getElementById('gf-photo-img');
+    const stat=document.getElementById('gf-photo-status');
+    if(prev)prev.style.display='block';
+    if(img)img.src=src;
+    if(stat)stat.textContent='Photo ready ✅';
+    window._pendingPhoto=src;
+  };
+  reader.readAsDataURL(file);
+}
+
 function saveGuest(){
   const name=document.getElementById('gf-name').value.trim();
   if(!name){showToast('Name required');return;}
   const wk=document.getElementById('gf-wk').value.trim();
-  const g={name,category:document.getElementById('gf-cat').value,designation:document.getElementById('gf-desig').value.trim(),party:document.getElementById('gf-party').value.trim(),state:document.getElementById('gf-state').value.trim(),contact:document.getElementById('gf-contact').value.trim(),companion:!!document.getElementById('gf-comp').value,wk,wiki:wk?`https://en.wikipedia.org/wiki/${wk}`:'',mode:document.getElementById('gf-mode').value,arrDate:document.getElementById('gf-arrdate').value.trim(),arrFlight:document.getElementById('gf-arrflight').value.trim(),arrTime:document.getElementById('gf-arrtime').value.trim(),depDate:document.getElementById('gf-depdate').value.trim(),depFlight:document.getElementById('gf-depflight').value.trim(),depTime:document.getElementById('gf-deptime').value.trim(),car:document.getElementById('gf-car').value.trim(),room:document.getElementById('gf-room').value.trim(),driver:document.getElementById('gf-driver').value.trim(),driverMob:document.getElementById('gf-drivermob').value.trim(),proto:document.getElementById('gf-proto').value.trim(),protoMob:document.getElementById('gf-protomob').value.trim(),special:document.getElementById('gf-special').value.trim()};
+  const photoUrl=window._pendingPhoto||(_gfEditKey?window._guests[_gfEditKey]?.photoUrl:'');
+  window._pendingPhoto=null;
+  const g={name,category:document.getElementById('gf-cat').value,designation:document.getElementById('gf-desig').value.trim(),party:document.getElementById('gf-party').value.trim(),state:document.getElementById('gf-state').value.trim(),contact:document.getElementById('gf-contact').value.trim(),companion:!!document.getElementById('gf-comp').value,wk,wiki:wk?`https://en.wikipedia.org/wiki/${wk}`:'',photoUrl:photoUrl||'',mode:document.getElementById('gf-mode').value,arrDate:document.getElementById('gf-arrdate').value.trim(),arrFlight:document.getElementById('gf-arrflight').value.trim(),arrTime:document.getElementById('gf-arrtime').value.trim(),depDate:document.getElementById('gf-depdate').value.trim(),depFlight:document.getElementById('gf-depflight').value.trim(),depTime:document.getElementById('gf-deptime').value.trim(),car:document.getElementById('gf-car').value.trim(),room:document.getElementById('gf-room').value.trim(),driver:document.getElementById('gf-driver').value.trim(),driverMob:document.getElementById('gf-drivermob').value.trim(),proto:document.getElementById('gf-proto').value.trim(),protoMob:document.getElementById('gf-protomob').value.trim(),special:document.getElementById('gf-special').value.trim()};
   let key=_gfEditKey;
   if(key){g.sl=window._guests[key]?.sl||0;window._guests[key]={...window._guests[key],...g};if(window._fbReady)window._update(window._ref(window._db,`events/${_activeEid}/guests/${key}`),g);logAct(name,'Guest updated','edit');showToast('✅ Updated');}
   else{const sls=Object.values(window._guests).map(x=>x.sl||0);g.sl=(sls.length?Math.max(...sls):0)+1;if(window._fbReady){const r=window._push(window._ref(window._db,`events/${_activeEid}/guests`),g);key=r.key;}else{key='g_'+Date.now();}window._guests[key]=g;if(_activeEvent)_activeEvent.guests=window._guests;logAct(name,'Guest added','add');showToast('✅ Guest added');}
@@ -1357,8 +1392,12 @@ function makeGCard(g){
   const card=document.createElement('div');card.className='gcard';card.dataset.key=g._key;card.dataset.st=s;card.onclick=()=>openDrw(g._key);
   card.style.animation='pf .4s ease both';
   card.innerHTML=`<div class="gc-st"></div>
-    <div class="gc-ban"><div class="gc-sl">#${String(g.sl||0).padStart(2,'0')}</div><div class="gc-dot ${m.dc}"></div>
-      <div class="gc-pw"><div class="gc-ph">${ini(g.name)}</div><img class="gc-img" alt="${g.name}"></div>
+    <div class="gc-photo">
+      <div class="gc-sl">#${String(g.sl||0).padStart(2,'0')}</div>
+      <div class="gc-dot ${m.dc}"></div>
+      <div class="gc-photo-init">${ini(g.name)}</div>
+      <img class="gc-photo-img" alt="${g.name}">
+      <div class="gc-photo-fade"></div>
     </div>
     <div class="gc-body">
       <div class="gc-name">${g.name}${g.companion?'<span class="ctag">+1</span>':''}</div>
@@ -1366,7 +1405,13 @@ function makeGCard(g){
       <div class="gc-slbl ${m.cls}">${m.ico} ${m.lbl}</div>
       <div class="gc-room">${g.room?'Rm '+g.room:g.designation||''}</div>
     </div>`;
-  if(g.wk){const img=card.querySelector('.gc-img');const ph=card.querySelector('.gc-ph');getPhoto(g.wk).then(s=>{if(s){img.src=s;img.onload=()=>{img.style.display='block';img.classList.add('pfade');ph.style.display='none';};};});}
+  const photoSrc=g.photoUrl||null;
+  const wkKey=g.wk||null;
+  const img=card.querySelector('.gc-photo-img');
+  const init=card.querySelector('.gc-photo-init');
+  function showPhoto(src){img.src=src;img.onload=()=>{img.style.display='block';img.classList.add('pfade');init.style.display='none';};}
+  if(photoSrc){showPhoto(photoSrc);}
+  else if(wkKey){getPhoto(wkKey).then(s=>{if(s)showPhoto(s);});}
   return card;
 }
 
@@ -1493,7 +1538,8 @@ function openDrw(key){
   document.getElementById('drSl').textContent='#'+String(g.sl||0).padStart(2,'0');
   const ph=document.getElementById('drPh');ph.textContent=ini(g.name);ph.style.display='flex';
   const img=document.getElementById('drPic');img.style.display='none';
-  if(g.wk)getPhoto(g.wk).then(src=>{if(src){img.src=src;img.onload=()=>{img.style.display='block';img.classList.add('pfade');ph.style.display='none';};}});
+  if(g.photoUrl){img.src=g.photoUrl;img.onload=()=>{img.style.display='block';img.classList.add('pfade');ph.style.display='none';};}
+  else if(g.wk)getPhoto(g.wk).then(src=>{if(src){img.src=src;img.onload=()=>{img.style.display='block';img.classList.add('pfade');ph.style.display='none';};}});
   document.getElementById('drName').innerHTML=g.name+(g.companion?'<span class="ctag">+companion</span>':'');
   document.getElementById('drDesig').textContent=[g.designation,g.party,g.state].filter(Boolean).join(' · ');
   const wi=document.getElementById('drWiki');if(g.wiki){wi.href=g.wiki;wi.style.display='inline-flex';}else{wi.style.display='none';}
