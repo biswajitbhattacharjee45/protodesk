@@ -1029,11 +1029,11 @@ function renderNewEvtForm(){
       <div class="fgroup"><label class="flabel">From</label><input class="finput" type="date" id="nEvFr"></div>
       <div class="fgroup"><label class="flabel">To</label><input class="finput" type="date" id="nEvTo"></div>
     </div>
-    <button class="btn-pri" onclick="createEvent()" style="width:100%">Create Event →</button>
+    <button class="btn-pri" onclick="createNewEvent()" style="width:100%">Create Event →</button>
   </div>`;
 }
 
-function createEvent(){
+function createNewEvent(){
   const name=document.getElementById('nEvNm')?.value.trim();
   if(!name){showToast('Event name required');return;}
   const ev={name,type:document.getElementById('nEvTy')?.value||'custom',venue:document.getElementById('nEvVn')?.value.trim()||'',city:document.getElementById('nEvCy')?.value.trim()||'',dateFrom:document.getElementById('nEvFr')?.value||'',dateTo:document.getElementById('nEvTo')?.value||'',status:'active',guests:{},statuses:{},notes:{},actlog:{}};
