@@ -713,8 +713,8 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#060f1
     <div class="l-divider"></div>
     <div class="lform">
       <div>
-        <label class="lfl">Login ID</label>
-        <input class="lfi" type="email" id="lEmail" placeholder="your.name@protodesk.sbi" autocomplete="username">
+        <label class="lfl">Mobile Number (Login ID)</label>
+        <input class="lfi" type="tel" id="lEmail" placeholder="10-digit mobile number" autocomplete="username" maxlength="10" pattern="[0-9]*" inputmode="numeric">
       </div>
       <div>
         <label class="lfl">Password</label>
@@ -1078,12 +1078,17 @@ function doLoginBtn(){
   });
 }
 async function doLogin(){
-  const email=document.getElementById('lEmail').value.trim();
+  let mobile=document.getElementById('lEmail').value.trim().replace(/\D/g,'');
   const pass=document.getElementById('lPass').value;
   const err=document.getElementById('lErr');err.classList.remove('show');
-  if(!email||!pass){err.textContent='Please enter your login ID and password.';err.classList.add('show');return;}
+  if(!mobile||!pass){err.textContent='Please enter your mobile number and password.';err.classList.add('show');return;}
+  if(mobile.length<10){err.textContent='Enter your 10-digit mobile number.';err.classList.add('show');return;}
+  if(mobile.length>10)mobile=mobile.slice(-10);
+  // Admin logins use email directly — detect by @ symbol
+  const rawInput=document.getElementById('lEmail').value.trim();
+  const loginEmail=rawInput.includes('@')?rawInput:mobile+'@protodesk.sbi';
   if(!window._auth){err.textContent='Firebase not connected — check your internet connection.';err.classList.add('show');return;}
-  try{await window._fbSignIn(window._auth,email,pass);}
+  try{await window._fbSignIn(window._auth,loginEmail,pass);}
   catch(e){
     let msg='Invalid email or password. Please try again.';
     if(e.code==='auth/user-not-found')msg='No account found with this login ID.';
@@ -1104,6 +1109,10 @@ async function doLogout(){
 function bootApp(){
   const u=window._cu;if(!u)return;
   const role=ROLES[u.role];
+  // Force password change on first login
+  if(u.mustChangePwd&&u.role!=='admin'){
+    showForcedPwdChange();return;
+  }
 
   // Update all header elements
   ['fbLed','mFbLed','fFbLed'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('live',window._fbReady);});
@@ -1716,29 +1725,32 @@ function buildAdmin(){
       <div style="font-size:.68rem;font-weight:800;color:var(--ink2);margin-bottom:.65rem">➕ Add New User</div>
       <div style="background:var(--bg);border-radius:10px;padding:.85rem;border:1px solid var(--border)">
         <div class="frow2" style="gap:.55rem;margin-bottom:.55rem">
-          <div class="fgroup"><label class="flabel">Full Name <span class="form-req">*</span></label><input class="finput" id="nNm" placeholder="e.g. Full Name" oninput="autoGenEmail()"></div>
+          <div class="fgroup"><label class="flabel">Full Name <span class="form-req">*</span></label><input class="finput" id="nNm" placeholder="Full name"></div>
+          <div class="fgroup"><label class="flabel">Mobile Number <span class="form-req">*</span></label>
+            <input class="finput" id="nMob" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric" oninput="autoGenEmail()">
+          </div>
           <div class="fgroup"><label class="flabel">Role <span class="form-req">*</span></label>
             <select class="fsel" id="nRl" onchange="onRoleChange()">
               <option value="">— Select Role —</option>
               ${Object.entries(ROLES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}
             </select>
           </div>
-          <div class="fgroup"><label class="flabel">Password <span class="form-req">*</span></label>
+          <div class="fgroup"><label class="flabel">Default Password <span class="form-req">*</span></label>
             <div style="display:flex;gap:.3rem">
               <input class="finput" id="nPwd" placeholder="Min 6 characters" style="flex:1">
-              <button class="btn-sec" onclick="genPassword()" style="flex-shrink:0;white-space:nowrap" title="Auto-generate password">🎲 Generate</button>
+              <button class="btn-sec" onclick="genPassword()" style="flex-shrink:0;white-space:nowrap">🎲 Generate</button>
             </div>
           </div>
-          <div class="fgroup" id="nSlGroup" style="display:none"><label class="flabel">Assigned Guest <span class="form-req">*</span></label>
+          <div class="fgroup" id="nSlGroup" style="display:none"><label class="flabel">Assigned Guest</label>
             <select class="fsel" id="nSl">
-              <option value="">— Select guest —</option>
+              <option value="">— Assign later —</option>
               ${guestOpts}
             </select>
           </div>
-          <div class="fgroup" style="grid-column:1/-1">
-            <label class="flabel">Login ID (auto-generated — editable)</label>
-            <input class="finput" id="nEm" placeholder="Will be auto-filled">
-            <span style="font-size:.58rem;color:var(--ink4);margin-top:2px;display:block">This is what the person types to log in. You can change it.</span>
+          <div class="fgroup" style="grid-column:1/-1;background:#f0f9ff;border-radius:8px;padding:.55rem .8rem;border:1px solid #bae6fd">
+            <div style="font-size:.62rem;font-weight:800;color:#0369a1;margin-bottom:.25rem">📱 Login ID — auto-filled from mobile number</div>
+            <input class="finput" id="nEm" placeholder="Auto-filled when mobile entered" style="background:#fff;font-family:monospace">
+            <div style="font-size:.58rem;color:#0369a1;margin-top:3px">⚠️ Staff will be asked to change this password on first login</div>
           </div>
         </div>
         <button class="btn-pri" onclick="addUser()" style="width:100%;justify-content:center;padding:.65rem">➕ Create User Account</button>
@@ -1876,11 +1888,11 @@ function updateAssigned(uid,sl){if(!window._fbReady){showToast('Firebase require
 function deleteUser(uid){if(!confirm('Delete user?'))return;if(!window._fbReady){showToast('Firebase required');return;}window._remove(window._ref(window._db,`users/${uid}`));showToast('🗑 Removed');}
 /* Auto-generate login ID from name */
 function autoGenEmail(){
-  const n=document.getElementById('nNm')?.value.trim();
-  const r=document.getElementById('nRl')?.value||'user';
-  if(!n)return;
-  const slug=n.split(' ')[0].toLowerCase().replace(/[^a-z]/g,'');
-  document.getElementById('nEm').value=`${slug}.${r}@protodesk.sbi`;
+  // Login ID is now mobile number — auto-fill when mobile is typed
+  const mob=document.getElementById('nMob')?.value.trim().replace(/\D/g,'').slice(-10);
+  if(mob&&mob.length===10){
+    document.getElementById('nEm').value=mob+'@protodesk.sbi';
+  }
 }
 function onRoleChange(){
   const r=document.getElementById('nRl')?.value;
@@ -1895,12 +1907,14 @@ function genPassword(){
 }
 async function addUser(){
   const n=document.getElementById('nNm')?.value.trim();
+  const mob=document.getElementById('nMob')?.value.trim().replace(/\D/g,'').slice(-10);
   const r=document.getElementById('nRl')?.value;
-  const e=document.getElementById('nEm')?.value.trim();
+  const e=document.getElementById('nEm')?.value.trim()||(mob?mob+'@protodesk.sbi':'');
   const pwd=document.getElementById('nPwd')?.value.trim();
   const sl=document.getElementById('nSl')?.value.trim();
   const stat=document.getElementById('nUserStatus');
   if(!n){showToast('Enter full name');return;}
+  if(!mob||mob.length<10){showToast('Enter 10-digit mobile number');return;}
   if(!r){showToast('Select a role');return;}
   if(!e){showToast('Login ID is required');return;}
   if(!pwd||pwd.length<6){showToast('Password must be at least 6 characters');return;}
@@ -1912,7 +1926,7 @@ async function addUser(){
     const cred=await window._fbCreateUser(window._auth,e,pwd);
     const uid=cred.user.uid;
     // Save profile in database
-    const profile={name:n,role:r,loginId:e,email:e,pwd,assignedSl:sl||null,assignedEventId:_activeEid||null};
+    const profile={name:n,role:r,loginId:e,email:e,pwd,mobile:mob,assignedSl:sl||null,assignedEventId:_activeEid||null,mustChangePwd:true};
     await window._set(window._ref(window._db,`users/${uid}`),profile);
     if(stat)stat.innerHTML='<span style="color:var(--green)">✅ '+n+' created successfully!</span>';
     showToast('✅ '+n+' added');
@@ -2257,13 +2271,12 @@ function makePwd(){
   return p.split('').sort(()=>Math.random()-.5).join('');
 }
 
-function makeLoginId(name,role,idx){
-  const parts=(name||'').toLowerCase().trim().split(/\s+/);
-  const first=(parts[0]||'user').replace(/[^a-z]/g,'');
-  const last=parts.length>1?(parts[parts.length-1]||'').replace(/[^a-z]/g,''):'';
-  const roleShort={admin:'adm',executive:'exec',dataentry:'de',protocol:'proto',driver:'drv',agent:'agt'}[role]||'user';
-  const base=last?`${first}.${last}`:first;
-  return `${base}.${roleShort}@sbi.protodesk`;
+function makeLoginId(mobile,role,idx){
+  // Mobile number is the login ID
+  const mob=(mobile||'').replace(/\D/g,'').slice(-10);
+  if(mob.length===10)return mob+'@protodesk.sbi';
+  // Fallback if no mobile
+  return 'user'+(idx||Date.now())+'@protodesk.sbi';
 }
 
 function normaliseRole(raw){
@@ -2300,7 +2313,7 @@ function parseRows(data){
     const mobile=(row['Mobile']||row['mobile']||row['MOBILE']||row['Phone']||row['phone']||row[keys[2]]||'').toString().trim().replace(/\D/g,'').slice(-10);
     const guestRaw=(row['Guest']||row['guest']||row['Assigned Guest']||row['assigned_guest']||row[keys[3]]||'').toString().trim();
     const guest=resolveGuest(guestRaw);
-    const loginId=makeLoginId(name,role,idx);
+    const loginId=makeLoginId(mobile,role,idx); // mobile number becomes login ID
     const pwd=makePwd();
     _bulkRows.push({name,role,mobile,loginId,pwd,guestKey:guest.key,guestName:guest.name,guestRaw,status:'pending',idx});
     idx++;
@@ -2770,7 +2783,73 @@ if(document.readyState==='loading'){
   _attachLoginListeners();
 }
 window.addEventListener('load',_attachLoginListeners);
+
+/* ── FORCED PASSWORD CHANGE ON FIRST LOGIN ── */
+function showForcedPwdChange(){
+  const modal=document.getElementById('pwdChangeModal');
+  if(!modal)return;
+  modal.style.display='flex';
+  const li=document.getElementById('fcpLoginId');
+  if(li)li.textContent=window._cu?.loginId||window._cu?.email||'';
+}
+
+async function submitForcedPwdChange(){
+  const np=document.getElementById('fcpNew')?.value.trim();
+  const nc=document.getElementById('fcpConfirm')?.value.trim();
+  const err=document.getElementById('fcpErr');
+  if(err)err.style.display='none';
+
+  if(!np||np.length<6){
+    if(err){err.textContent='Password must be at least 6 characters.';err.style.display='block';}return;
+  }
+  if(np!==nc){
+    if(err){err.textContent='Passwords do not match. Please try again.';err.style.display='block';}return;
+  }
+
+  try{
+    // Update password in Firebase Auth
+    const {updatePassword}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    await updatePassword(window._auth.currentUser,np);
+    // Remove mustChangePwd flag from database
+    await window._update(window._ref(window._db,`users/${window._cu.uid}`),{mustChangePwd:false,pwd:''});
+    window._cu.mustChangePwd=false;
+    // Hide modal and boot app
+    const modal=document.getElementById('pwdChangeModal');
+    if(modal)modal.style.display='none';
+    bootApp();
+  } catch(e){
+    const err=document.getElementById('fcpErr');
+    if(err){
+      err.textContent='Error updating password. Please try again.';
+      err.style.display='block';
+    }
+  }
+}
 </script>
+
+<!-- Forced Password Change Modal -->
+<div id="pwdChangeModal" style="display:none;position:fixed;inset:0;background:#060f1e;z-index:9999;align-items:center;justify-content:center;padding:1.5rem;">
+  <div style="background:#fff;border-radius:24px;padding:2.2rem 2rem;width:min(400px,94vw);box-shadow:0 32px 80px rgba(0,0,0,.5);">
+    <div style="text-align:center;margin-bottom:1.4rem;">
+      <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#0b1d3a,#1a3463);display:inline-flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:.75rem;">🔐</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:#0b1d3a;">Set Your Password</div>
+      <div style="font-size:.72rem;color:#64748b;margin-top:.3rem;line-height:1.5;">Welcome to ProtoDesk! Please set a new password<br>that you will remember easily.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.85rem;">
+      <div>
+        <label style="font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#334155;display:block;margin-bottom:.3rem;">New Password</label>
+        <input id="fcpNew" type="password" placeholder="Choose a password (min 6 characters)" style="width:100%;padding:.8rem 1rem;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.95rem;font-family:'Sora',sans-serif;color:#0f172a;outline:none;">
+      </div>
+      <div>
+        <label style="font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#334155;display:block;margin-bottom:.3rem;">Confirm Password</label>
+        <input id="fcpConfirm" type="password" placeholder="Repeat your new password" style="width:100%;padding:.8rem 1rem;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.95rem;font-family:'Sora',sans-serif;color:#0f172a;outline:none;">
+      </div>
+      <div id="fcpErr" style="display:none;background:#fff1f2;border:1px solid #fecaca;border-radius:8px;padding:.45rem .75rem;font-size:.72rem;color:#dc2626;text-align:center;"></div>
+      <button onclick="submitForcedPwdChange()" style="width:100%;padding:.9rem;border:none;border-radius:12px;background:linear-gradient(135deg,#0b1d3a,#1a3463);color:#fff;font-size:.95rem;font-weight:700;font-family:'Sora',sans-serif;cursor:pointer;">Save Password & Continue →</button>
+      <div style="font-size:.62rem;color:#94a3b8;text-align:center;">Your login ID: <span id="fcpLoginId" style="font-family:monospace;font-weight:700;color:#334155;"></span></div>
+    </div>
+  </div>
+</div>
 
 <!-- Fullscreen photo viewer -->
 <div class="photo-viewer" id="photoViewer" onclick="closePhotoViewer()">
