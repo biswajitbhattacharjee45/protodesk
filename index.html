@@ -380,7 +380,7 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
 .gc-dot{position:absolute;top:6px;right:7px;width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(255,255,255,.5);z-index:2;}
 .gc-dot.arr{background:#4ade80;}.gc-dot.dep{background:#60a5fa;}.gc-dot.pend{background:#fde68a;}.gc-dot.nos{background:#f87171;}.gc-dot.none{background:rgba(255,255,255,.25);}
 .gc-body{padding:.48rem .5rem .52rem;text-align:center;}
-.gc-name{font-size:.68rem;font-weight:700;color:#f1e8ff;line-height:1.3;margin-bottom:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.gc-name{font-size:.68rem;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 .gc-cat{font-size:.58rem;color:rgba(167,139,250,.7);margin-bottom:.22rem;}
 .gc-slbl{font-size:.56rem;font-weight:800;padding:1px 5px;border-radius:4px;display:inline-block;}
 .gc-slbl.arr{background:var(--gbg);color:var(--green);}.gc-slbl.dep{background:var(--bbg);color:var(--blue);}.gc-slbl.pend{background:#fffbeb;color:#b45309;}.gc-slbl.nos{background:#fff1f2;color:var(--red);}.gc-slbl.none{background:var(--bg);color:var(--ink4);}
@@ -1696,22 +1696,28 @@ function makeGCard(g){
   const card=document.createElement('div');card.className='gcard';card.dataset.key=g._key;card.dataset.st=s;card.onclick=()=>openDrw(g._key);
   card.style.animation='pf .4s ease both';
   const isMyG=window._cu?.assignedSl===g._key;
-  const myBorder=isMyG?'border:2px solid var(--saffron);box-shadow:0 0 0 3px rgba(240,90,26,.15);':'';
-  card.style.cssText+=(isMyG?';border:2px solid var(--saffron);box-shadow:0 0 0 3px rgba(240,90,26,.18)':'');
+  // My guest card — dark purple glass with glowing text
+  if(isMyG){
+    card.style.cssText+=[
+      'background:linear-gradient(145deg,#2d1158,#1e0a3c)',
+      'border:1.5px solid rgba(196,181,253,.5)',
+      'box-shadow:0 0 0 3px rgba(139,92,246,.15),0 8px 32px rgba(109,40,217,.3),0 0 60px rgba(139,92,246,.15)'
+    ].join(';');
+  }
   card.innerHTML=`<div class="gc-st"></div>
     <div class="gc-photo">
-      <div class="gc-sl">#${String(g.sl||0).padStart(2,'0')}</div>
+      <div class="gc-sl" style="${isMyG?'color:rgba(196,181,253,.9)':''}">#${String(g.sl||0).padStart(2,'0')}</div>
       <div class="gc-dot ${m.dc}"></div>
-      <div class="gc-photo-init">${ini(g.name)}</div>
+      <div class="gc-photo-init" style="${isMyG?'color:rgba(255,255,255,.35)':''}}">${ini(g.name)}</div>
       <img class="gc-photo-img" alt="${g.name}">
       <div class="gc-photo-fade"></div>
-      ${isMyG?'<div style="position:absolute;bottom:6px;left:7px;z-index:3;background:var(--saffron);color:#fff;font-size:.48rem;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.06em">MY GUEST</div>':''}
+      ${isMyG?`<div style="position:absolute;bottom:6px;left:7px;z-index:3;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;font-size:.48rem;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.08em;box-shadow:0 2px 8px rgba(109,40,217,.4)">⭐ MY GUEST</div>`:''}
     </div>
     <div class="gc-body">
-      <div class="gc-name">${g.name}${g.companion?'<span class="ctag">+1</span>':''}</div>
-      <div class="gc-cat">${(g.category||'').split('/')[0].trim()}</div>
+      <div class="gc-name" style="${isMyG?'color:#ffffff;font-weight:800;text-shadow:0 0 20px rgba(196,181,253,.7),0 0 40px rgba(139,92,246,.4)':''}">${g.name}${g.companion?'<span class="ctag">+1</span>':''}</div>
+      <div class="gc-cat" style="${isMyG?'color:rgba(196,181,253,.7)':''}">${(g.category||'').split('/')[0].trim()}</div>
       <div class="gc-slbl ${m.cls}">${m.ico} ${m.lbl}</div>
-      <div class="gc-room">${g.room?'Rm '+g.room:g.designation||''}</div>
+      <div class="gc-room" style="${isMyG?'color:rgba(196,181,253,.65)':''}">${g.room?'Rm '+g.room:g.designation||''}</div>
     </div>`;
   const photoSrc=g.photoUrl||null;
   const wkKey=g.wk||null;
