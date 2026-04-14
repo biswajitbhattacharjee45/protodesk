@@ -11,6 +11,7 @@
 <title>ProtoDesk v7</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Sora:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
 <!-- PWA Manifest -->
@@ -110,71 +111,121 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 .screen.active{display:flex;}
 
 /* ══════════════════════════════════════════════════
-   LOGIN SCREEN
+   LOGIN SCREEN — ELEGANT REDESIGN
 ══════════════════════════════════════════════════ */
 #s-login{
-  background:linear-gradient(155deg,#0b1d3a 0%,#1a3463 50%,#0a4f6b 100%);
+  background:#060f1e;
   align-items:center;justify-content:center;overflow-y:auto;
-  padding:calc(var(--safe-top)+1rem) 1.25rem calc(var(--safe-bottom)+1rem);
+  padding:calc(var(--safe-top)+1.5rem) 1.25rem calc(var(--safe-bottom)+1.5rem);
+  position:relative;
 }
-.login-box{background:rgba(255,255,255,.95);border-radius:20px;padding:2rem 1.8rem;width:min(400px,100%);box-shadow:var(--sh4);animation:lpop .4s ease;}
-@keyframes lpop{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
-.l-gem{width:52px;height:52px;border-radius:13px;background:linear-gradient(135deg,var(--saffron),var(--amber));display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 4px 14px rgba(240,90,26,.45);margin:0 auto .7rem;}
-.l-title{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--navy);text-align:center;}
-.l-sub{font-size:.62rem;color:var(--ink3);letter-spacing:.12em;text-transform:uppercase;text-align:center;margin-bottom:1.2rem;}
-.lform{display:flex;flex-direction:column;gap:.7rem;}
-.lfl{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.25rem;display:block;}
-.lfi{width:100%;padding:.7rem .85rem;border:1.5px solid var(--border2);border-radius:9px;font-size:.9rem;font-family:'Sora',sans-serif;color:var(--ink);}
-.lfi:focus{outline:none;border-color:var(--saffron);}
-.lbtn{width:100%;padding:.8rem;border:none;border-radius:10px;background:linear-gradient(135deg,var(--saffron),var(--orange));color:#fff;font-size:.92rem;font-weight:700;font-family:'Sora',sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(240,90,26,.4);transition:all .2s;}
-.lbtn:hover{transform:translateY(-2px);}
-.lerr{font-size:.68rem;color:var(--red);background:#fff1f2;border:1px solid #fecaca;border-radius:7px;padding:.35rem .65rem;text-align:center;display:none;}
+#s-login::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 20% 40%,rgba(240,90,26,.18) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 80% at 80% 70%,rgba(11,100,140,.25) 0%,transparent 55%);
+  pointer-events:none;
+}
+.login-box{
+  background:rgba(255,255,255,.97);
+  border-radius:24px;padding:2.5rem 2.2rem;
+  width:min(420px,100%);
+  box-shadow:0 32px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.08);
+  animation:lpop .5s cubic-bezier(.22,.68,0,1.2);
+  position:relative;z-index:1;
+}
+@keyframes lpop{from{opacity:0;transform:translateY(24px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+.l-logo-wrap{text-align:center;margin-bottom:1.6rem;}
+.l-gem{
+  width:68px;height:68px;border-radius:18px;
+  background:linear-gradient(135deg,#0b1d3a 0%,#1a3463 50%,#0a4f6b 100%);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:1.8rem;
+  box-shadow:0 8px 24px rgba(11,29,58,.4),0 0 0 6px rgba(11,29,58,.08);
+  margin-bottom:1rem;
+}
+.l-title{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:700;color:#0b1d3a;letter-spacing:-.02em;}
+.l-subtitle{font-size:.7rem;color:var(--ink3);letter-spacing:.18em;text-transform:uppercase;margin-top:.3rem;}
+.l-divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:1.4rem 0;}
+.lform{display:flex;flex-direction:column;gap:.9rem;}
+.lfl{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin-bottom:.3rem;display:block;}
+.lfi{
+  width:100%;padding:.85rem 1rem;
+  border:1.5px solid var(--border2);border-radius:10px;
+  font-size:1rem;font-family:'Sora',sans-serif;color:var(--ink);
+  transition:border-color .2s,box-shadow .2s;
+}
+.lfi:focus{outline:none;border-color:var(--saffron);box-shadow:0 0 0 3px rgba(240,90,26,.12);}
+.lfi::placeholder{color:var(--ink4);}
+.lbtn{
+  width:100%;padding:.95rem;border:none;border-radius:12px;
+  background:linear-gradient(135deg,#0b1d3a,#1a3463);
+  color:#fff;font-size:1rem;font-weight:700;
+  font-family:'Sora',sans-serif;cursor:pointer;
+  box-shadow:0 6px 20px rgba(11,29,58,.35);
+  transition:all .22s;letter-spacing:.02em;
+  margin-top:.3rem;
+}
+.lbtn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(11,29,58,.45);}
+.lbtn:active{transform:translateY(0);}
+.lerr{font-size:.75rem;color:var(--red);background:#fff1f2;border:1px solid #fecaca;border-radius:8px;padding:.45rem .75rem;text-align:center;display:none;}
 .lerr.show{display:block;}
-.demo-area{margin-top:.85rem;padding-top:.85rem;border-top:1px solid var(--border);}
-.demo-lbl{font-size:.56rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink4);text-align:center;margin-bottom:.4rem;}
-.demo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.28rem;}
-.dbtn{padding:.4rem .3rem;border-radius:7px;border:1px solid var(--border);background:var(--bg);font-size:.56rem;font-weight:700;cursor:pointer;color:var(--ink2);font-family:'Sora',sans-serif;text-align:center;transition:all .18s;}
-.dbtn:hover{border-color:var(--navy);color:var(--navy);}
+.demo-area{margin-top:1.1rem;padding-top:1rem;border-top:1px solid var(--border);}
+.demo-lbl{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);text-align:center;margin-bottom:.5rem;}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;}
+.dbtn{
+  padding:.55rem .5rem;border-radius:9px;
+  border:1.5px solid var(--border);background:var(--bg);
+  font-size:.68rem;font-weight:700;cursor:pointer;
+  color:var(--ink2);font-family:'Sora',sans-serif;
+  text-align:center;transition:all .18s;
+}
+.dbtn:hover{border-color:var(--navy);background:var(--navy);color:#fff;}
 
 /* ══════════════════════════════════════════════════
    SHARED HEADER
 ══════════════════════════════════════════════════ */
-.hdr{background:var(--navy);background-image:radial-gradient(ellipse 70% 120% at 0% 50%,rgba(240,90,26,.16) 0%,transparent 55%);display:flex;align-items:center;padding:0 1rem;gap:.65rem;flex-shrink:0;box-shadow:0 4px 20px rgba(0,0,0,.3);}
-.hdr.desktop-hdr{height:56px;padding-top:var(--safe-top);}
-.hdr.mobile-hdr{height:calc(var(--safe-top)+52px);padding-top:var(--safe-top);}
-.bgem{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--saffron),var(--amber));display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;}
-.bname{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#fff;line-height:1;flex-shrink:0;}
-.bsub{font-size:.44rem;color:var(--amber);letter-spacing:.16em;text-transform:uppercase;display:block;margin-top:1px;}
-.ev-cap{flex:1;min-width:0;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:3px 11px;cursor:pointer;margin:0 .3rem;transition:background .2s;}
-.ev-cap:hover{background:rgba(255,255,255,.12);}
-.ev-ldot{width:6px;height:6px;border-radius:50%;background:var(--teal2);box-shadow:0 0 0 3px rgba(16,185,129,.3);animation:lp 2s infinite;flex-shrink:0;}
+.hdr{
+  background:#0b1d3a;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;padding:0 1.1rem;gap:.75rem;flex-shrink:0;
+  box-shadow:0 4px 24px rgba(0,0,0,.35);
+}
+.hdr.desktop-hdr{height:62px;padding-top:var(--safe-top);}
+.hdr.mobile-hdr{height:calc(var(--safe-top)+56px);padding-top:var(--safe-top);}
+.bgem{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#0b1d3a,#1a3463);border:1.5px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.bname{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#fff;line-height:1;flex-shrink:0;letter-spacing:-.01em;}
+.bsub{font-size:.5rem;color:rgba(245,166,35,.8);letter-spacing:.18em;text-transform:uppercase;display:block;margin-top:2px;}
+.ev-cap{flex:1;min-width:0;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:5px 13px;cursor:pointer;margin:0 .4rem;transition:background .2s;}
+.ev-cap:hover{background:rgba(255,255,255,.1);}
+.ev-ldot{width:7px;height:7px;border-radius:50%;background:var(--teal2);box-shadow:0 0 0 3px rgba(16,185,129,.3);animation:lp 2s infinite;flex-shrink:0;}
 @keyframes lp{0%,100%{box-shadow:0 0 0 3px rgba(16,185,129,.3);}50%{box-shadow:0 0 0 7px rgba(16,185,129,.1);}}
-.ev-txt{font-size:.6rem;color:rgba(255,255,255,.75);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.hdr-right{display:flex;align-items:center;gap:.45rem;flex-shrink:0;}
-.role-badge{padding:2px 8px;border-radius:20px;font-size:.53rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
-.rb-admin{background:rgba(124,58,237,.3);color:#c4b5fd;border:1px solid rgba(124,58,237,.3);}
-.rb-dataentry{background:rgba(5,150,105,.3);color:#6ee7b7;border:1px solid rgba(5,150,105,.3);}
-.rb-executive{background:rgba(37,99,235,.3);color:#93c5fd;border:1px solid rgba(37,99,235,.3);}
-.rb-protocol{background:rgba(245,158,11,.25);color:#fcd34d;border:1px solid rgba(245,158,11,.25);}
-.rb-driver{background:rgba(148,163,184,.2);color:#cbd5e1;border:1px solid rgba(148,163,184,.2);}
-.fb-chip{display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:3px 7px;}
-.fb-led{width:5px;height:5px;border-radius:50%;background:#3f3f3f;transition:background .5s;}
+.ev-txt{font-size:.72rem;color:rgba(255,255,255,.82);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hdr-right{display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
+.role-badge{padding:3px 10px;border-radius:20px;font-size:.62rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;}
+.rb-admin{background:rgba(124,58,237,.25);color:#c4b5fd;border:1px solid rgba(124,58,237,.35);}
+.rb-dataentry{background:rgba(5,150,105,.25);color:#6ee7b7;border:1px solid rgba(5,150,105,.35);}
+.rb-executive{background:rgba(37,99,235,.25);color:#93c5fd;border:1px solid rgba(37,99,235,.35);}
+.rb-protocol{background:rgba(245,158,11,.2);color:#fcd34d;border:1px solid rgba(245,158,11,.3);}
+.rb-driver{background:rgba(148,163,184,.15);color:#e2e8f0;border:1px solid rgba(148,163,184,.25);}
+.fb-chip{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:4px 9px;}
+.fb-led{width:6px;height:6px;border-radius:50%;background:#3f3f3f;transition:background .5s;}
 .fb-led.live{background:var(--teal2);}
-.fb-lbl{font-size:.5rem;color:rgba(255,255,255,.35);font-weight:700;}
-.u-pill{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:3px 8px;}
-.u-av{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--amber));display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:800;color:#fff;}
-.u-nm{font-size:.56rem;color:rgba(255,255,255,.7);font-weight:600;}
-.logout-btn{background:rgba(220,38,38,.2);border:1px solid rgba(220,38,38,.3);color:#fca5a5;padding:2px 8px;border-radius:6px;font-size:.54rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;}
-.nav-tabs{display:flex;gap:2px;background:rgba(0,0,0,.25);border-radius:7px;padding:2px;}
-.ntab{background:transparent;border:none;color:rgba(255,255,255,.38);padding:4px 8px;border-radius:5px;font-size:.59rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Sora',sans-serif;white-space:nowrap;}
-.ntab:hover{color:rgba(255,255,255,.72);}
-.ntab.on{background:var(--saffron);color:#fff;}
+.fb-lbl{font-size:.6rem;color:rgba(255,255,255,.45);font-weight:700;letter-spacing:.04em;}
+.u-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:4px 10px;}
+.u-av{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--amber));display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:800;color:#fff;}
+.u-nm{font-size:.68rem;color:rgba(255,255,255,.82);font-weight:600;}
+.logout-btn{background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);color:#fca5a5;padding:4px 10px;border-radius:7px;font-size:.65rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;transition:all .18s;}
+.logout-btn:hover{background:rgba(220,38,38,.3);}
+.nav-tabs{display:flex;gap:3px;background:rgba(0,0,0,.2);border-radius:9px;padding:3px;}
+.ntab{background:transparent;border:none;color:rgba(255,255,255,.5);padding:5px 11px;border-radius:7px;font-size:.7rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Sora',sans-serif;white-space:nowrap;letter-spacing:.01em;}
+.ntab:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.08);}
+.ntab.on{background:var(--saffron);color:#fff;box-shadow:0 2px 8px rgba(240,90,26,.4);}
 /* Mobile nav row */
-.mob-nav{display:none;background:var(--navy);border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0;}
+.mob-nav{display:none;background:#0b1d3a;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0;}
 .mob-nav::-webkit-scrollbar{display:none;}
-.mob-nav-inner{display:flex;gap:2px;padding:5px 8px;min-width:max-content;}
-.mob-ntab{background:transparent;border:none;color:rgba(255,255,255,.45);padding:6px 12px;border-radius:6px;font-size:.62rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;transition:all .2s;}
-.mob-ntab.on{background:var(--saffron);color:#fff;}
+.mob-nav-inner{display:flex;gap:3px;padding:6px 10px;min-width:max-content;}
+.mob-ntab{background:transparent;border:none;color:rgba(255,255,255,.5);padding:7px 14px;border-radius:8px;font-size:.74rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;transition:all .2s;}
+.mob-ntab.on{background:var(--saffron);color:#fff;box-shadow:0 2px 8px rgba(240,90,26,.35);}
 .mob-ntab:active{opacity:.7;}
 
 /* ══════════════════════════════════════════════════
@@ -188,16 +239,16 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 /* Basic shared desktop styles */
 .sec{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh1);border:1px solid var(--border);overflow:hidden;}
 .sec-head{padding:.75rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:.5rem;}
-.sec-title{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700;}
+.sec-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;}
 .sec-body{padding:.9rem 1rem;}
-.btn-pri{padding:.5rem .9rem;border:none;border-radius:8px;background:var(--saffron);color:#fff;font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;transition:all .18s;display:inline-flex;align-items:center;gap:.3rem;}
+.btn-pri{padding:.6rem 1rem;border:none;border-radius:9px;background:var(--saffron);color:#fff;font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;transition:all .18s;display:inline-flex;align-items:center;gap:.3rem;}
 .btn-pri:hover{background:var(--orange);}
-.btn-sec{padding:.45rem .8rem;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--ink2);font-size:.7rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;}
+.btn-sec{padding:.55rem .9rem;border:1.5px solid var(--border);border-radius:9px;background:var(--bg);color:var(--ink2);font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;}
 .btn-danger{padding:.38rem .7rem;border:1px solid #fecaca;border-radius:7px;background:#fff1f2;color:var(--red);font-size:.63rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;}
-.finput{width:100%;padding:.52rem .72rem;border:1.5px solid var(--border);border-radius:8px;font-size:.76rem;font-family:'Sora',sans-serif;color:var(--ink);}
+.finput{width:100%;padding:.65rem .85rem;border:1.5px solid var(--border);border-radius:9px;font-size:.85rem;font-family:'Sora',sans-serif;color:var(--ink);}
 .finput:focus{outline:none;border-color:var(--saffron);}
 .fsel{width:100%;padding:.52rem .72rem;border:1.5px solid var(--border);border-radius:8px;font-size:.76rem;font-family:'Sora',sans-serif;background:var(--bg);color:var(--ink);}
-.flabel{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);margin-bottom:.28rem;display:block;}
+.flabel{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink4);margin-bottom:.28rem;display:block;}
 .fgroup{display:flex;flex-direction:column;gap:.28rem;margin-bottom:.55rem;}
 .frow2{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;}
 .frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.55rem;}
@@ -212,14 +263,14 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 .kpi.kr::after{background:linear-gradient(90deg,var(--amber),var(--orange));}
 .kpi.kw::after{background:linear-gradient(90deg,var(--ink4),var(--ink3));}
 .kpi.kn::after{background:linear-gradient(90deg,var(--red),#f87171);}
-.kpi-num{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;line-height:1;margin:.15rem 0 .08rem;}
+.kpi-num{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;line-height:1;margin:.15rem 0 .08rem;}
 .kpi.kt .kpi-num{color:var(--navy);}
 .kpi.ka .kpi-num{color:var(--green);}
 .kpi.kd .kpi-num{color:var(--blue);}
 .kpi.kr .kpi-num{color:var(--orange);}
 .kpi.kw .kpi-num{color:var(--ink3);}
 .kpi.kn .kpi-num{color:var(--red);}
-.kpi-lbl{font-size:.54rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);}
+.kpi-lbl{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);}
 
 /* Guest cards */
 .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:.6rem;}
@@ -239,11 +290,11 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 .gc-dot{position:absolute;top:6px;right:7px;width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(255,255,255,.5);z-index:2;}
 .gc-dot.arr{background:#4ade80;}.gc-dot.dep{background:#60a5fa;}.gc-dot.pend{background:#fde68a;}.gc-dot.nos{background:#f87171;}.gc-dot.none{background:rgba(255,255,255,.25);}
 .gc-body{padding:.48rem .5rem .52rem;text-align:center;}
-.gc-name{font-size:.6rem;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-.gc-cat{font-size:.48rem;color:var(--ink4);margin-bottom:.22rem;}
-.gc-slbl{font-size:.48rem;font-weight:800;padding:1px 5px;border-radius:4px;display:inline-block;}
+.gc-name{font-size:.68rem;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.gc-cat{font-size:.58rem;color:var(--ink4);margin-bottom:.22rem;}
+.gc-slbl{font-size:.56rem;font-weight:800;padding:1px 5px;border-radius:4px;display:inline-block;}
 .gc-slbl.arr{background:var(--gbg);color:var(--green);}.gc-slbl.dep{background:var(--bbg);color:var(--blue);}.gc-slbl.pend{background:#fffbeb;color:#b45309;}.gc-slbl.nos{background:#fff1f2;color:var(--red);}.gc-slbl.none{background:var(--bg);color:var(--ink4);}
-.gc-room{font-size:.48rem;font-family:'DM Mono',monospace;color:var(--ink3);margin-top:2px;}
+.gc-room{font-size:.56rem;font-family:'DM Mono',monospace;color:var(--ink3);margin-top:2px;}
 .gc-ban{height:50px;position:relative;background:linear-gradient(135deg,#0b1d3a,#1e3f73,#0a6080);}
 .gc-pw{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);width:34px;height:34px;}
 .gc-ph{width:34px;height:34px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.7rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#1e3f73,#059669);}
@@ -262,7 +313,7 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 .chip.s.on{background:var(--teal);border-color:var(--teal);color:#fff;}
 
 /* Status badges */
-.tsp{display:inline-flex;align-items:center;gap:2px;border-radius:20px;padding:1px 5px;font-size:.5rem;font-weight:800;}
+.tsp{display:inline-flex;align-items:center;gap:3px;border-radius:20px;padding:2px 8px;font-size:.62rem;font-weight:800;}
 .tsp.s-none{background:var(--bg);color:var(--ink4);border:1px solid var(--border);}
 .tsp.s-arrived{background:var(--gbg);color:var(--green);border:1px solid var(--gbd);}
 .tsp.s-departed{background:var(--bbg);color:var(--blue);border:1px solid var(--bbd);}
@@ -281,7 +332,7 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 .dr-close{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3;}
 .dr-sl{position:absolute;top:11px;left:12px;font-size:.5rem;font-weight:800;color:rgba(255,255,255,.6);font-family:'DM Mono',monospace;z-index:3;}
 .dr-name-over{position:absolute;bottom:10px;left:14px;right:90px;z-index:3;}
-.dr-name{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:2px;line-height:1.25;}
+.dr-name{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:2px;line-height:1.25;}
 .dr-desig-over{font-size:.62rem;color:rgba(255,255,255,.65);margin-top:1px;}
 .dr-sbadge{position:absolute;bottom:12px;right:12px;border-radius:20px;padding:3px 10px;font-size:.55rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border:1px solid;z-index:3;}
 .dr-sbadge.arr{background:rgba(22,163,74,.25);color:#4ade80;border-color:rgba(74,222,128,.4);}
@@ -337,11 +388,11 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 .tblwrap{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh1);border:1px solid var(--border);overflow:hidden;}
 .dtbl{width:100%;border-collapse:collapse;}
 .dtbl thead tr{background:var(--navy);}
-.dtbl th{font-size:.5rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding:8px 9px;text-align:left;white-space:nowrap;}
+.dtbl th{font-size:.6rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);padding:9px 10px;text-align:left;white-space:nowrap;}
 .dtbl tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
 .dtbl tbody tr:hover{background:var(--bg);}
 .dtbl tbody tr:last-child{border-bottom:none;}
-.dtbl td{padding:6px 9px;font-size:.68rem;color:var(--ink);vertical-align:middle;}
+.dtbl td{padding:8px 10px;font-size:.78rem;color:var(--ink);vertical-align:middle;}
 
 /* Guest form */
 .form-section{margin-bottom:.9rem;}
@@ -609,24 +660,29 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 <!-- ════════════════════ LOGIN ════════════════════ -->
 <div class="screen active" id="s-login">
   <div class="login-box">
-    <div class="l-gem">🏛️</div>
-    <div class="l-title">ProtoDesk</div>
-    <div class="l-sub">Official Event Protocol Management</div>
+    <div class="l-logo-wrap">
+      <div class="l-gem">🏛️</div>
+      <div class="l-title">ProtoDesk</div>
+      <div class="l-subtitle">Official Event Protocol Management · SBI LHO Guwahati</div>
+    </div>
+    <div class="l-divider"></div>
     <div class="lform">
-      <div><label class="lfl">Email</label><input class="lfi" type="email" id="lEmail" placeholder="your@email.com" autocomplete="username"></div>
-      <div><label class="lfl">Password</label><input class="lfi" type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div>
+        <label class="lfl">Login ID</label>
+        <input class="lfi" type="email" id="lEmail" placeholder="your.name@protodesk.sbi" autocomplete="username">
+      </div>
+      <div>
+        <label class="lfl">Password</label>
+        <input class="lfi" type="password" id="lPass" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
       <div class="lerr" id="lErr"></div>
       <button class="lbtn" onclick="doLogin()">Sign In →</button>
     </div>
     <div class="demo-area">
-      <div class="demo-lbl">Demo — tap any role to explore</div>
+      <div class="demo-lbl">Demo — explore without login</div>
       <div class="demo-grid">
         <button class="dbtn" onclick="demoLogin('admin')">🔑 Admin</button>
-        <button class="dbtn" onclick="demoLogin('dataentry')">📝 Data Entry</button>
         <button class="dbtn" onclick="demoLogin('executive')">📊 Executive</button>
-        <button class="dbtn" onclick="demoLogin('protocol')">🎖 Protocol</button>
-        <button class="dbtn" onclick="demoLogin('driver')">🚗 Driver</button>
-        <button class="dbtn" onclick="demoLogin('agent')">🚘 Agent</button>
       </div>
     </div>
   </div>
@@ -885,21 +941,21 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
    CONSTANTS & ROLES
 ══════════════════════════════════════════════════ */
 const ROLES={
-  admin:    {label:'Admin',      mobile:false,map:true, can:{dash:true, guests:true, entry:true, arrival:true,hotel:true, table:true, admin:true, status:true, note:true, allg:true, del:true,  vehicle:true}},
-  dataentry:{label:'Data Entry', mobile:false,map:false,can:{dash:false,guests:true, entry:true, arrival:true,hotel:true, table:true, admin:false,status:true, note:true, allg:true, del:false, vehicle:true}},
-  executive:{label:'Executive',  mobile:false,map:true, can:{dash:true, guests:true, entry:false,arrival:true,hotel:true, table:true, admin:false,status:false,note:false,allg:true, del:false, vehicle:false}},
-  protocol: {label:'Protocol',   mobile:true, map:false,can:{dash:false,guests:false,entry:false,arrival:false,hotel:false,table:false,admin:false,status:true, note:true, allg:false,del:false, vehicle:false}},
-  driver:   {label:'Driver',     mobile:true, map:false,can:{dash:false,guests:false,entry:false,arrival:false,hotel:false,table:false,admin:false,status:true, note:true, allg:false,del:false, vehicle:false}},
-  agent:    {label:'Agent',      mobile:false,map:false,can:{dash:false,guests:false,entry:false,arrival:false,hotel:false,table:true, admin:false,status:false,note:false,allg:true, del:false, vehicle:true}},
+  admin:    {label:'Admin',            mobile:false,map:true, field:false,can:{dash:true, guests:true, entry:true, arrival:true,hotel:true, table:true, admin:true, status:true, note:true, allg:true, del:true,  vehicle:true, viewall:true}},
+  dataentry:{label:'Data Entry',       mobile:false,map:false,field:false,can:{dash:false,guests:true, entry:true, arrival:true,hotel:true, table:true, admin:false,status:true, note:true, allg:true, del:false, vehicle:true, viewall:true}},
+  executive:{label:'Executive',        mobile:false,map:true, field:false,can:{dash:true, guests:true, entry:false,arrival:true,hotel:true, table:true, admin:false,status:false,note:false,allg:true, del:false, vehicle:false,viewall:true}},
+  protocol: {label:'Protocol Officer', mobile:false,map:true, field:true, can:{dash:true, guests:true, entry:false,arrival:true,hotel:true, table:true, admin:false,status:true, note:true, allg:false,del:false, vehicle:false,viewall:true}},
+  driver:   {label:'Driver',           mobile:true, map:false,field:true, can:{dash:false,guests:false,entry:false,arrival:false,hotel:false,table:false,admin:false,status:true, note:true, allg:false,del:false, vehicle:false,viewall:false}},
+  agent:    {label:'Travel Agent',     mobile:false,map:false,field:false,can:{dash:false,guests:false,entry:false,arrival:false,hotel:false,table:true, admin:false,status:false,note:false,allg:true, del:false, vehicle:true, viewall:true}},
 };
 
 const DEMO={
-  admin:    {uid:'d-admin',  name:'Biswajit B.',  role:'admin',    avatar:'BB',assignedEventId:null,assignedSl:null},
-  dataentry:{uid:'d-de',    name:'Anita Sharma', role:'dataentry',avatar:'AS',assignedEventId:null,assignedSl:null},
-  executive:{uid:'d-exec',  name:'DGM Office',   role:'executive',avatar:'DG',assignedEventId:null,assignedSl:null},
-  protocol: {uid:'d-proto', name:'Papori Das',   role:'protocol', avatar:'PD',assignedEventId:'ev1',assignedSl:'g1'},
-  driver:   {uid:'d-drv',   name:'Ajay Boro',    role:'driver',   avatar:'AB',assignedEventId:'ev1',assignedSl:'g1'},
-  agent:    {uid:'d-agent', name:'Travel Desk',  role:'agent',    avatar:'TD',assignedEventId:null,assignedSl:null},
+  admin:    {uid:'d-admin',  name:'Admin User',   role:'admin',    avatar:'AU',assignedEventId:null,assignedSl:null},
+  dataentry:{uid:'d-de',    name:'Data Entry',   role:'dataentry',avatar:'DE',assignedEventId:null,assignedSl:null},
+  executive:{uid:'d-exec',  name:'Executive',    role:'executive',avatar:'EX',assignedEventId:null,assignedSl:null},
+  protocol: {uid:'d-proto', name:'Protocol Officer',role:'protocol',avatar:'PO',assignedEventId:null,assignedSl:null},
+  driver:   {uid:'d-drv',   name:'Driver',       role:'driver',   avatar:'DR',assignedEventId:null,assignedSl:null},
+  agent:    {uid:'d-agent', name:'Travel Agent', role:'agent',    avatar:'TA',assignedEventId:null,assignedSl:null},
 };
 
 const GUEST_CATS=['MP / Member of Parliament','Senator','Minister / Official','VIP / Dignitary','Executive / Senior Officer','Director / Officer','Consultant / Advisor','Guest Speaker','Delegate','Staff / Support','Other'];
@@ -960,7 +1016,15 @@ function showLoginScreen(){showScreen('s-login');}
 /* ══════════════════════════════════════════════════
    LOGIN
 ══════════════════════════════════════════════════ */
-function demoLogin(role){window._cu=DEMO[role];window._events={ev1:makeDemoEvent()};window._fbReady=false;bootApp();}
+function demoLogin(role){
+  window._cu=DEMO[role];
+  // No hardcoded event data — demo starts with empty state
+  // Admin/exec see empty dashboard and can create events + import guests
+  // Protocol/driver see field screen with no guest assigned (demo)
+  window._events={};
+  window._fbReady=false;
+  bootApp();
+}
 async function doLogin(){
   const email=document.getElementById('lEmail').value.trim();
   const pass=document.getElementById('lPass').value;
@@ -990,7 +1054,7 @@ function bootApp(){
   const fnm=document.getElementById('fNm');if(fnm)fnm.textContent=u.name||'ProtoDesk';
 
   if(role.mobile){
-    // Protocol / Driver → mobile field screen
+    // Driver only → mobile field screen
     initFieldScreen();
     showScreen('s-field');
     const eid=u.assignedEventId||Object.keys(window._events)[0];
@@ -1009,14 +1073,11 @@ function bootApp(){
    EVENT SELECTION
 ══════════════════════════════════════════════════ */
 function makeDemoEvent(){
-  return {id:'ev1',name:'Standing Committee on Finance',type:'parliamentary',venue:'SBI LHO Guwahati',dateFrom:'2025-05-27',dateTo:'2025-05-29',status:'active',
-    guests:{
-      g1:{sl:1,name:'Ms Dola Sen',category:'MP / Member of Parliament',designation:'Chairperson',party:'AITC',state:'West Bengal',companion:true,arrFlight:'Vande Bharat',arrDate:'28/05/2025',arrTime:'11:20',depFlight:'6E 201',depDate:'29/05/2025',depTime:'07:45',car:'AS 01 FQ 9001',driver:'Ajay Boro',driverMob:'7635822351',room:'511,522,525',proto:'Papori Das Chakraborty',protoMob:'9954512093',wiki:'https://en.wikipedia.org/wiki/Dola_Sen',wk:'Dola_Sen',special:''},
-      g2:{sl:2,name:'Dr Sangeeta Balwant',category:'MP / Member of Parliament',designation:'Member',party:'BJP',state:'Uttar Pradesh',companion:true,arrFlight:'Vande Bharat',arrDate:'28/05/2025',arrTime:'11:20',depFlight:'6E 2008',depDate:'29/05/2025',depTime:'10:40',car:'AS 01 LC 9661',driver:'SUREN SWARGARY',driverMob:'8638255439',room:'1026',proto:'Pratima Patir',protoMob:'8876095099',wiki:'https://en.wikipedia.org/wiki/Sangeeta_Balwant',wk:'Sangeeta_Balwant',special:''},
-      g3:{sl:3,name:'Smt Renuka Chowdhury',category:'MP / Member of Parliament',designation:'Member',party:'INC',state:'Telangana',companion:false,arrFlight:'Vande Bharat',arrDate:'28/05/2025',arrTime:'11:20',depFlight:'6E 213',depDate:'29/05/2025',depTime:'08:55',car:'AS 01 GH 1257',driver:'ANUP KALITA',driverMob:'9864692056',room:'1020',proto:'Nilakshi Choudhury',protoMob:'9435561352',wiki:'https://en.wikipedia.org/wiki/Renuka_Chowdhury',wk:'Renuka_Chowdhury',special:''},
-      g4:{sl:4,name:'Dr. Bhagwat Karad',category:'MP / Member of Parliament',designation:'Member',party:'BJP',state:'Maharashtra',companion:true,arrFlight:'Vande Bharat',arrDate:'28/05/2025',arrTime:'11:20',depFlight:'6E 213',depDate:'29/05/2025',depTime:'08:55',car:'AS 01 QC 3960',driver:'DIPANKAR MEDHI',driverMob:'9864908633',room:'1017',proto:'Rajiv Ranjan Prasad',protoMob:'6901258934',wiki:'https://en.wikipedia.org/wiki/Bhagwat_Karad',wk:'Bhagwat_Karad',special:''},
-      g5:{sl:5,name:'Shri Dhananjay Mahadik',category:'MP / Member of Parliament',designation:'Member',party:'BJP',state:'Maharashtra',companion:false,arrFlight:'IX 1186',arrDate:'28/05/2025',arrTime:'11:45',depFlight:'6E 6966',depDate:'28/05/2025',depTime:'19:50',car:'AS01 QC 4260',driver:'DILIP THAKURIYA',driverMob:'9435220468',room:'920',proto:'Raj Kumar Jaiswal',protoMob:'8521539051',wiki:'https://en.wikipedia.org/wiki/Dhananjay_Mahadik',wk:'Dhananjay_Mahadik',special:'Same-day departure'},
-    },statuses:{},notes:{},actlog:{}};
+  // Clean empty event — no guest data hardcoded
+  // All data comes from import or manual entry
+  return {id:'ev1',name:'Demo Event',type:'custom',venue:'SBI LHO Guwahati',
+    dateFrom:'',dateTo:'',status:'active',
+    guests:{},statuses:{},notes:{},actlog:{}};
 }
 
 function selectEvent(eid){
@@ -1103,10 +1164,10 @@ function pageAllowed(id){
 
 const PAGE_TABS=[
   {id:'dash',    lbl:'📊 Dashboard'},
-  {id:'guests',  lbl:'👤 Guests'},
-  {id:'arrival', lbl:'✈ Arrival'},
-  {id:'hotel',   lbl:'🏨 Hotel'},
-  {id:'table',   lbl:'☰ Table'},
+  {id:'guests',  lbl:'👤 All Guests'},
+  {id:'arrival', lbl:'✈ Arrivals'},
+  {id:'hotel',   lbl:'🏨 Hotel Rooms'},
+  {id:'table',   lbl:'📋 Full Table'},
   {id:'admin',   lbl:'⚙ Admin'},
 ];
 
@@ -1154,7 +1215,9 @@ function buildPage(id){
 function markSt(key,status){
   if(!key||!can('status'))return;
   const u=window._cu;
-  if(!can('allg')&&u.assignedSl!==key){showToast('⛔ Not authorised for this guest');return;}
+  if(!can('allg')&&u.assignedSl!==key){
+    showToast('⚠️ You can only update status for your assigned guest');return;
+  }
   window._statuses[key]={status};
   if(_activeEvent)_activeEvent.statuses=window._statuses;
   refreshCardStatus(key);refreshKPIs();
@@ -1412,6 +1475,49 @@ function renderActFeed(){
 function buildGuests(){
   const wrap=document.getElementById('pg-guests');wrap.innerHTML='';
   const div=document.createElement('div');div.style.marginTop='1rem';wrap.appendChild(div);
+
+  // ── PROTOCOL OFFICER INFO BAR ────────────────────────────
+  if(window._cu?.role==='protocol'&&window._cu?.assignedSl){
+    const myGuest=window._guests[window._cu.assignedSl];
+    if(myGuest){
+      const pb=document.createElement('div');
+      pb.style.cssText='background:linear-gradient(135deg,rgba(240,90,26,.1),rgba(245,166,35,.06));border:2px solid rgba(240,90,26,.35);border-radius:14px;padding:.85rem 1.15rem;margin-bottom:.9rem;display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;';
+      pb.innerHTML=`
+        <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#0b1d3a,#1a3463);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fff;flex-shrink:0">${ini(myGuest.name)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.64rem;font-weight:800;color:var(--saffron);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.18rem">⭐ Your Assigned Guest</div>
+          <div style="font-size:.92rem;font-weight:700;color:var(--ink)">${myGuest.name}</div>
+          <div style="font-size:.68rem;color:var(--ink3);margin-top:2px">${[myGuest.designation,myGuest.room?'Room '+myGuest.room:'',myGuest.car].filter(Boolean).join(' · ')}</div>
+        </div>
+        <div style="background:var(--bg);border-radius:9px;padding:.5rem .75rem;border:1px solid var(--border);font-size:.62rem;color:var(--ink3);text-align:center;flex-shrink:0">
+          <div style="font-weight:700;color:var(--ink2);margin-bottom:2px">You can see all guests</div>
+          <div>Status updates: your guest only</div>
+        </div>`;
+      div.appendChild(pb);
+    }
+  }
+
+  // ── GOOGLE SHEET IMPORT BANNER ──────────────────────────
+  if(can('entry')){
+    const imp=document.createElement('div');
+    imp.style.cssText='background:linear-gradient(135deg,#0b1d3a,#1e3f73);border-radius:12px;padding:.85rem 1.1rem;margin-bottom:.85rem;display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;';
+    imp.innerHTML=`
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:.72rem;font-weight:800;color:#fff;margin-bottom:.2rem">📋 Import Guests from Google Sheet</div>
+        <div style="font-size:.62rem;color:rgba(255,255,255,.55)">Paste your coordination sheet link — all guest data loads automatically</div>
+      </div>
+      <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
+        <input id="gsImportUrl" style="padding:.45rem .75rem;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:.7rem;font-family:'Sora',sans-serif;width:260px;outline:none" placeholder="Paste Google Sheet link here">
+        <button onclick="importFromGSheet()" style="padding:.45rem .9rem;background:var(--saffron);color:#fff;border:none;border-radius:8px;font-size:.7rem;font-weight:800;font-family:'Sora',sans-serif;cursor:pointer;white-space:nowrap">⬇ Import Guests</button>
+        <label style="padding:.45rem .9rem;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;font-size:.7rem;font-weight:700;cursor:pointer;white-space:nowrap">
+          📂 Upload CSV/Excel
+          <input type="file" accept=".csv,.xlsx,.xls" style="display:none" onchange="importFromFile(this)">
+        </label>
+      </div>
+      <div id="gsImportStatus" style="width:100%;font-size:.65rem;color:rgba(255,255,255,.6);display:none"></div>`;
+    div.appendChild(imp);
+  }
+
   const ss=document.createElement('div');ss.className='sstrip';
   ss.innerHTML=`<div class="sq"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" id="qIn" placeholder="Search…" oninput="applyFilters()"></div>
   <div class="chips"><button class="chip on" onclick="setTF('all',this)">All</button>${[...new Set(gl().map(g=>g.category))].map(c=>`<button class="chip" onclick="setTF(${JSON.stringify(c)},this)">${c.split('/')[0].trim()}</button>`).join('')}</div>
@@ -1441,6 +1547,9 @@ function makeGCard(g){
   const s=gst(g._key);const m=SM[s]||SM.none;
   const card=document.createElement('div');card.className='gcard';card.dataset.key=g._key;card.dataset.st=s;card.onclick=()=>openDrw(g._key);
   card.style.animation='pf .4s ease both';
+  const isMyG=window._cu?.assignedSl===g._key;
+  const myBorder=isMyG?'border:2px solid var(--saffron);box-shadow:0 0 0 3px rgba(240,90,26,.15);':'';
+  card.style.cssText+=(isMyG?';border:2px solid var(--saffron);box-shadow:0 0 0 3px rgba(240,90,26,.18)':'');
   card.innerHTML=`<div class="gc-st"></div>
     <div class="gc-photo">
       <div class="gc-sl">#${String(g.sl||0).padStart(2,'0')}</div>
@@ -1448,6 +1557,7 @@ function makeGCard(g){
       <div class="gc-photo-init">${ini(g.name)}</div>
       <img class="gc-photo-img" alt="${g.name}">
       <div class="gc-photo-fade"></div>
+      ${isMyG?'<div style="position:absolute;bottom:6px;left:7px;z-index:3;background:var(--saffron);color:#fff;font-size:.48rem;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.06em">MY GUEST</div>':''}
     </div>
     <div class="gc-body">
       <div class="gc-name">${g.name}${g.companion?'<span class="ctag">+1</span>':''}</div>
@@ -1529,7 +1639,7 @@ function buildAdmin(){
       <div style="font-size:.68rem;font-weight:800;color:var(--ink2);margin-bottom:.65rem">➕ Add New User</div>
       <div style="background:var(--bg);border-radius:10px;padding:.85rem;border:1px solid var(--border)">
         <div class="frow2" style="gap:.55rem;margin-bottom:.55rem">
-          <div class="fgroup"><label class="flabel">Full Name <span class="form-req">*</span></label><input class="finput" id="nNm" placeholder="e.g. Papori Das Chakraborty" oninput="autoGenEmail()"></div>
+          <div class="fgroup"><label class="flabel">Full Name <span class="form-req">*</span></label><input class="finput" id="nNm" placeholder="e.g. Full Name" oninput="autoGenEmail()"></div>
           <div class="fgroup"><label class="flabel">Role <span class="form-req">*</span></label>
             <select class="fsel" id="nRl" onchange="onRoleChange()">
               <option value="">— Select Role —</option>
@@ -1560,6 +1670,89 @@ function buildAdmin(){
     </div>
   </div>`;
   top.appendChild(um);
+
+  // ── BULK IMPORT SECTION ──────────────────────────────
+  const guestOptsAll='<option value="">— Assign later —</option>'+gl().map(g=>`<option value="${g._key}">#${g.sl||''} ${g.name}</option>`).join('');
+  const bi=document.createElement('div');bi.className='sec';
+  bi.innerHTML=`<div class="sec-head"><div class="sec-title">📋 Bulk Import — Protocol Officers / Drivers / Staff</div></div>
+  <div class="sec-body">
+
+    <div style="background:var(--bbg);border:1px solid var(--bbd);border-radius:9px;padding:.75rem .9rem;margin-bottom:.85rem;font-size:.72rem;color:var(--ink2);line-height:1.9">
+      <b style="color:var(--blue)">How it works</b><br>
+      1. Prepare a sheet with columns: <span style="font-family:monospace;font-size:.65rem;background:#fff;padding:1px 6px;border-radius:4px;border:1px solid var(--bbd)">Name | Role | Mobile</span> &nbsp;+&nbsp; optionally <span style="font-family:monospace;font-size:.65rem;background:#fff;padding:1px 6px;border-radius:4px;border:1px solid var(--bbd)">Guest</span><br>
+      2. Upload Excel / CSV <b>or</b> paste Google Sheet link<br>
+      3. App auto-generates Login ID and Password for each person<br>
+      4. Guest column is <b>optional</b> — assign now or link later from the user table<br>
+      5. Click <b>Create All Accounts</b> — all logins created instantly<br>
+      6. Click <b>Send via WhatsApp</b> — opens WhatsApp for each person with their login details
+    </div>
+
+    <div style="background:var(--gbg);border:1px solid var(--gbd);border-radius:9px;padding:.65rem .9rem;margin-bottom:.85rem">
+      <div style="font-size:.6rem;font-weight:800;color:var(--green);margin-bottom:.35rem">📄 Sample Sheet Format (Guest column optional)</div>
+      <table style="font-size:.65rem;border-collapse:collapse;width:100%">
+        <tr style="background:rgba(5,150,105,.15)">
+          <td style="padding:4px 10px;font-weight:800;border:1px solid var(--gbd)">Name</td>
+          <td style="padding:4px 10px;font-weight:800;border:1px solid var(--gbd)">Role</td>
+          <td style="padding:4px 10px;font-weight:800;border:1px solid var(--gbd)">Mobile</td>
+          <td style="padding:4px 10px;font-weight:800;border:1px solid var(--gbd)">Guest (optional)</td>
+        </tr>
+        <tr><td style="padding:4px 10px;border:1px solid var(--gbd)">Protocol Officer Name</td><td style="padding:4px 10px;border:1px solid var(--gbd)">Protocol</td><td style="padding:4px 10px;border:1px solid var(--gbd)">98XXXXXXXX</td><td style="padding:4px 10px;border:1px solid var(--gbd);color:var(--ink3)">Guest Name <i>(or leave blank)</i></td></tr>
+        <tr><td style="padding:4px 10px;border:1px solid var(--gbd)">Driver Name</td><td style="padding:4px 10px;border:1px solid var(--gbd)">Driver</td><td style="padding:4px 10px;border:1px solid var(--gbd)">76XXXXXXXX</td><td style="padding:4px 10px;border:1px solid var(--gbd);color:var(--ink3)"><i>blank — assign later</i></td></tr>
+        <tr><td style="padding:4px 10px;border:1px solid var(--gbd)">Another Protocol Officer</td><td style="padding:4px 10px;border:1px solid var(--gbd)">Protocol</td><td style="padding:4px 10px;border:1px solid var(--gbd)">94XXXXXXXX</td><td style="padding:4px 10px;border:1px solid var(--gbd)">Guest Name 2</td></tr>
+        <tr><td style="padding:4px 10px;border:1px solid var(--gbd)">Senior Officer Name</td><td style="padding:4px 10px;border:1px solid var(--gbd)">Executive</td><td style="padding:4px 10px;border:1px solid var(--gbd)">98XXXXXXXX</td><td style="padding:4px 10px;border:1px solid var(--gbd);color:var(--ink3)"><i>blank — sees all guests</i></td></tr>
+      </table>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.85rem">
+      <div>
+        <div style="font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);margin-bottom:.38rem">Option A — Upload Excel / CSV</div>
+        <label style="display:flex;align-items:center;gap:.5rem;padding:.8rem .9rem;border:2px dashed var(--border);border-radius:10px;cursor:pointer;background:var(--bg);font-size:.72rem;color:var(--ink2);font-weight:600" onmouseover="this.style.borderColor='var(--saffron)'" onmouseout="this.style.borderColor='var(--border)'">
+          📂 Choose File (.xlsx / .csv)
+          <input type="file" id="bulkFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleBulkFile(this)">
+        </label>
+        <div style="font-size:.58rem;color:var(--ink4);margin-top:.25rem">First row = column headers</div>
+      </div>
+      <div>
+        <div style="font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);margin-bottom:.38rem">Option B — Google Sheet URL</div>
+        <div style="display:flex;gap:.35rem">
+          <input class="finput" id="gSheetUrl" placeholder="Paste Google Sheet share link" style="flex:1;font-size:.68rem">
+          <button class="btn-pri" onclick="loadGSheet()" style="flex-shrink:0;padding:.5rem .75rem">Load ↗</button>
+        </div>
+        <div style="font-size:.58rem;color:var(--ink4);margin-top:.25rem">Sheet must be shared as "Anyone with link can view"</div>
+      </div>
+    </div>
+
+    <div id="bulkPreview" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem;flex-wrap:wrap;gap:.4rem">
+        <div style="font-size:.68rem;font-weight:800;color:var(--ink2)" id="bulkCount">0 users found</div>
+        <button class="btn-sec" onclick="regenAllPasswords()" style="font-size:.6rem">🎲 Regenerate Passwords</button>
+      </div>
+      <div style="overflow-x:auto;margin-bottom:.75rem;border-radius:9px;overflow:hidden;border:1px solid var(--border)">
+        <table style="width:100%;border-collapse:collapse;font-size:.7rem">
+          <thead><tr style="background:var(--navy)">
+            <th style="color:var(--gold);padding:7px 9px;font-size:.52rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:left">Name</th>
+            <th style="color:var(--gold);padding:7px 9px;font-size:.52rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:left">Role</th>
+            <th style="color:var(--gold);padding:7px 9px;font-size:.52rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:left">Mobile</th>
+            <th style="color:var(--gold);padding:7px 9px;font-size:.52rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:left">Login ID</th>
+            <th style="color:var(--gold);padding:7px 9px;font-size:.52rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:left">Password</th>
+            <th style="color:var(--gold);padding:7px 9px;font-size:.52rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:left">Assigned Guest</th>
+            <th style="color:var(--gold);padding:7px 9px;font-size:.52rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:left">Status</th>
+          </tr></thead>
+          <tbody id="bulkTbody"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:.55rem;align-items:center;flex-wrap:wrap">
+        <button class="btn-pri" onclick="bulkCreateUsers()" id="bulkCreateBtn" style="padding:.65rem 1.2rem">🚀 Create All Accounts</button>
+        <button class="btn-sec" onclick="exportBulkCredentials()" id="bulkExportBtn" style="display:none">📥 Download Credentials Excel</button>
+        <span id="bulkProgress" style="font-size:.68rem;color:var(--ink3)"></span>
+      </div>
+      <div id="bulkWAArea" style="display:none;margin-top:.75rem">
+        <div style="font-size:.62rem;font-weight:800;color:var(--ink3);margin-bottom:.4rem;letter-spacing:.08em;text-transform:uppercase">Send WhatsApp to each person</div>
+        <div id="bulkWAList" style="display:flex;flex-direction:column;gap:.35rem"></div>
+      </div>
+    </div>
+  </div>`;
+  top.appendChild(bi);
   // Event & system tools
   const tools=document.createElement('div');tools.className='admin-grid';top.appendChild(tools);
   const et=document.createElement('div');et.className='sec';
@@ -1706,8 +1899,24 @@ function openDrw(key){
   const note=window._notes[key]||'';const nd=document.getElementById('noteDisp');
   if(note){nd.textContent='📝 '+note;nd.classList.remove('empty');}else{nd.textContent='Tap to add note…';nd.classList.add('empty');}
   document.getElementById('noteInp').value=note;
-  const canSt=can('status');['sArr','sDep','sRt','sNs'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=!canSt;});
-  document.getElementById('noteInp').disabled=!can('note');document.querySelector('.notesave').disabled=!can('note');
+  const u2=window._cu;
+  const isMyGuest=can('allg')||(u2.assignedSl===key);
+  const canSt=can('status')&&isMyGuest;
+  ['sArr','sDep','sRt','sNs'].forEach(id=>{const b=document.getElementById(id);if(b){b.disabled=!canSt;b.style.opacity=canSt?'1':'0.35';}});
+  document.getElementById('noteInp').disabled=!can('note')||!isMyGuest;
+  document.querySelector('.notesave').disabled=!can('note')||!isMyGuest;
+  const actSec=document.getElementById('drActSec');
+  if(actSec){
+    const readOnlyNote=document.getElementById('drReadOnlyNote');
+    if(!isMyGuest&&can('status')){
+      if(!readOnlyNote){
+        const n=document.createElement('div');n.id='drReadOnlyNote';
+        n.style.cssText='background:#fffbeb;border:1px solid #fde68a;border-radius:7px;padding:.45rem .75rem;font-size:.68rem;color:#92400e;margin-bottom:.5rem;';
+        n.textContent='👁 Viewing only — you can update status for your assigned guest only';
+        actSec.insertBefore(n,actSec.firstChild);
+      }
+    } else {const rn=document.getElementById('drReadOnlyNote');if(rn)rn.remove();}
+  }
   updateDrwBadge(s);
   document.getElementById('drwBg').classList.add('open');document.getElementById('drw').classList.add('open');
   document.body.style.overflow='hidden';
@@ -1954,6 +2163,704 @@ function closePhotoViewer(){
   document.body.style.overflow='';
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closePhotoViewer();});
+
+/* ══════════════════════════════════════════════════
+   BULK USER IMPORT
+══════════════════════════════════════════════════ */
+let _bulkRows=[];
+
+function makePwd(){
+  const u='ABCDEFGHJKMNPQRSTUVWXYZ';
+  const l='abcdefghjkmnpqrstuvwxyz';
+  const n='23456789';
+  const s='@#';
+  let p=u[Math.floor(Math.random()*u.length)]+l[Math.floor(Math.random()*l.length)]+n[Math.floor(Math.random()*n.length)]+s[Math.floor(Math.random()*s.length)];
+  const all=u+l+n;
+  for(let i=0;i<6;i++)p+=all[Math.floor(Math.random()*all.length)];
+  return p.split('').sort(()=>Math.random()-.5).join('');
+}
+
+function makeLoginId(name,role,idx){
+  const parts=(name||'').toLowerCase().trim().split(/\s+/);
+  const first=(parts[0]||'user').replace(/[^a-z]/g,'');
+  const last=parts.length>1?(parts[parts.length-1]||'').replace(/[^a-z]/g,''):'';
+  const roleShort={admin:'adm',executive:'exec',dataentry:'de',protocol:'proto',driver:'drv',agent:'agt'}[role]||'user';
+  const base=last?`${first}.${last}`:first;
+  return `${base}.${roleShort}@sbi.protodesk`;
+}
+
+function normaliseRole(raw){
+  const r=(raw||'').toLowerCase().trim();
+  if(r.includes('protocol')||r==='proto'||r==='po')return'protocol';
+  if(r.includes('driver')||r==='drv')return'driver';
+  if(r.includes('admin')||r==='adm')return'admin';
+  if(r.includes('exec'))return'executive';
+  if(r.includes('data')||r.includes('entry'))return'dataentry';
+  if(r.includes('agent')||r.includes('travel'))return'agent';
+  return'protocol';
+}
+
+function resolveGuest(guestRaw){
+  if(!guestRaw||!guestRaw.trim())return{key:null,name:'— Assign later —'};
+  const g=window._guests||{};
+  // direct key match (g1, g2 etc)
+  if(g[guestRaw.trim()])return{key:guestRaw.trim(),name:g[guestRaw.trim()].name};
+  // partial name match
+  const found=Object.entries(g).find(([k,v])=>v.name?.toLowerCase().includes(guestRaw.toLowerCase().trim()));
+  if(found)return{key:found[0],name:found[1].name};
+  return{key:null,name:'— Assign later —'};
+}
+
+function parseRows(data){
+  _bulkRows=[];
+  let idx=0;
+  data.forEach(row=>{
+    const keys=Object.keys(row);
+    const name=(row['Name']||row['name']||row['NAME']||row[keys[0]]||'').toString().trim();
+    if(!name||name.toLowerCase()==='name'||!name)return;
+    const roleRaw=(row['Role']||row['role']||row['ROLE']||row[keys[1]]||'protocol').toString();
+    const role=normaliseRole(roleRaw);
+    const mobile=(row['Mobile']||row['mobile']||row['MOBILE']||row['Phone']||row['phone']||row[keys[2]]||'').toString().trim().replace(/\D/g,'').slice(-10);
+    const guestRaw=(row['Guest']||row['guest']||row['Assigned Guest']||row['assigned_guest']||row[keys[3]]||'').toString().trim();
+    const guest=resolveGuest(guestRaw);
+    const loginId=makeLoginId(name,role,idx);
+    const pwd=makePwd();
+    _bulkRows.push({name,role,mobile,loginId,pwd,guestKey:guest.key,guestName:guest.name,guestRaw,status:'pending',idx});
+    idx++;
+  });
+  renderBulkPreview();
+}
+
+function renderBulkPreview(){
+  const tbody=document.getElementById('bulkTbody');
+  const cnt=document.getElementById('bulkCount');
+  if(!tbody)return;
+  tbody.innerHTML='';
+  if(cnt)cnt.textContent=_bulkRows.length+' user'+ (_bulkRows.length!==1?'s':'')+' found';
+  const guestOpts='<option value="">— Assign later —</option>'+Object.entries(window._guests||{}).map(([k,g])=>`<option value="${k}">${g.name}</option>`).join('');
+  _bulkRows.forEach((r,i)=>{
+    const statusHtml=
+      r.status==='done'?'<span style="color:var(--green);font-weight:700;font-size:.65rem">✅ Created</span>':
+      r.status==='error'?`<span style="color:var(--red);font-size:.6rem">❌ ${r.error||'Error'}</span>`:
+      '<span style="color:var(--ink4);font-size:.65rem">⏳ Pending</span>';
+    const tr=document.createElement('tr');
+    tr.style.cssText='border-bottom:0.5px solid var(--border);';
+    tr.innerHTML=`
+      <td style="padding:6px 9px;font-weight:600;font-size:.7rem;white-space:nowrap">${r.name}</td>
+      <td style="padding:6px 9px"><span style="font-size:.57rem;font-weight:800;padding:2px 7px;border-radius:20px;background:var(--bg);border:1px solid var(--border);white-space:nowrap">${ROLES[r.role]?.label||r.role}</span></td>
+      <td style="padding:6px 9px;font-family:monospace;font-size:.65rem">${r.mobile||'—'}</td>
+      <td style="padding:6px 9px;font-family:monospace;font-size:.63rem;color:var(--sky)">${r.loginId}</td>
+      <td style="padding:6px 9px">
+        <div style="display:flex;align-items:center;gap:.3rem">
+          <span style="font-family:monospace;font-size:.65rem;font-weight:700;background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">${r.pwd}</span>
+          <button onclick="regenOnePwd(${i})" style="background:none;border:none;cursor:pointer;font-size:.7rem" title="Regenerate">🎲</button>
+        </div>
+      </td>
+      <td style="padding:6px 9px;min-width:140px">
+        <select style="font-size:.62rem;border:1px solid var(--border);border-radius:5px;padding:2px 5px;background:var(--bg);width:100%" onchange="_bulkRows[${i}].guestKey=this.value;_bulkRows[${i}].guestName=this.options[this.selectedIndex].text">
+          ${guestOpts.replace(`value="${r.guestKey||''}"`,`value="${r.guestKey||''}" selected`)}
+        </select>
+      </td>
+      <td style="padding:6px 9px" id="bstat-${i}">${statusHtml}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('bulkPreview').style.display='block';
+}
+
+function regenOnePwd(i){
+  _bulkRows[i].pwd=makePwd();
+  renderBulkPreview();
+}
+
+function regenAllPasswords(){
+  _bulkRows.forEach(r=>{if(r.status!=='done')r.pwd=makePwd();});
+  renderBulkPreview();
+  showToast('🎲 All passwords regenerated');
+}
+
+async function handleBulkFile(input){
+  const file=input.files[0];if(!file)return;
+  if(!window.XLSX){showToast('SheetJS not loaded — try refreshing');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!data.length){showToast('No data found in file');return;}
+      parseRows(data);
+      showToast('✅ File loaded — '+_bulkRows.length+' users found');
+    }catch(err){showToast('Could not read file: '+err.message);}
+  };
+  reader.readAsBinaryString(file);
+}
+
+async function loadGSheet(){
+  const url=document.getElementById('gSheetUrl')?.value.trim();
+  if(!url){showToast('Paste a Google Sheet URL first');return;}
+  const m=url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if(!m){showToast('Invalid Google Sheet URL — copy the full share link');return;}
+  const id=m[1];
+  // Get gid if specific sheet tab
+  const gid=(url.match(/gid=(\d+)/)||[])[1]||'0';
+  const csvUrl=`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+  showToast('⏳ Loading Google Sheet…');
+  try{
+    const res=await fetch(csvUrl);
+    if(!res.ok)throw new Error('Cannot access sheet. Set sharing to "Anyone with link can view".');
+    const text=await res.text();
+    if(!window.XLSX)throw new Error('SheetJS not loaded');
+    const wb=XLSX.read(text,{type:'string'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+    if(!data.length){showToast('Sheet appears empty — check column headers');return;}
+    parseRows(data);
+    showToast('✅ Sheet loaded — '+_bulkRows.length+' users found');
+  }catch(err){showToast('❌ '+err.message);}
+}
+
+async function bulkCreateUsers(){
+  if(!_bulkRows.length){showToast('No users to create');return;}
+  if(!window._fbReady){showToast('Firebase not connected');return;}
+  const btn=document.getElementById('bulkCreateBtn');
+  btn.disabled=true;btn.textContent='⏳ Creating accounts…';
+  let done=0,errors=0;
+  for(let i=0;i<_bulkRows.length;i++){
+    const r=_bulkRows[i];
+    if(r.status==='done')continue;
+    const prog=document.getElementById('bulkProgress');
+    if(prog)prog.textContent=`Creating ${i+1} of ${_bulkRows.length}…`;
+    const statCell=document.getElementById('bstat-'+i);
+    if(statCell)statCell.innerHTML='<span style="color:var(--amber);font-size:.65rem">⏳ Creating…</span>';
+    try{
+      const cred=await window._fbCreateUser(window._auth,r.loginId,r.pwd);
+      const uid=cred.user.uid;
+      await window._set(window._ref(window._db,`users/${uid}`),{
+        name:r.name,role:r.role,loginId:r.loginId,email:r.loginId,
+        pwd:r.pwd,mobile:r.mobile||'',
+        assignedSl:r.guestKey||null,
+        assignedEventId:r.guestKey?(_activeEid||null):null
+      });
+      r.status='done';r.uid=uid;done++;
+      if(statCell)statCell.innerHTML='<span style="color:var(--green);font-weight:700;font-size:.65rem">✅ Created</span>';
+    }catch(err){
+      r.status='error';
+      r.error=err.code==='auth/email-already-in-use'?'Already exists':
+               err.code==='auth/invalid-email'?'Invalid login ID':
+               (err.message||'Error');
+      errors++;
+      if(statCell)statCell.innerHTML=`<span style="color:var(--red);font-size:.6rem">❌ ${r.error}</span>`;
+    }
+  }
+  btn.disabled=false;btn.textContent='🚀 Create All Accounts';
+  const prog=document.getElementById('bulkProgress');
+  if(prog)prog.textContent=`✅ ${done} created${errors?' · ❌ '+errors+' failed':''}`;
+  if(done>0){
+    document.getElementById('bulkExportBtn').style.display='inline-flex';
+    buildBulkWAButtons();
+    showToast(`✅ ${done} account${done!==1?'s':''} created successfully!`);
+    renderUserTable();
+  }
+}
+
+function buildBulkWAButtons(){
+  const area=document.getElementById('bulkWAArea');
+  const list=document.getElementById('bulkWAList');
+  if(!area||!list)return;
+  const created=_bulkRows.filter(r=>r.status==='done'&&r.mobile);
+  if(!created.length){area.style.display='none';return;}
+  area.style.display='block';
+  list.innerHTML='';
+  created.forEach(r=>{
+    const guestLine=r.guestKey&&r.guestName&&r.guestName!=='— Assign later —'?`
+👤 Assigned guest: ${r.guestName}`:'';
+    const msg=encodeURIComponent(
+      `🏛 *ProtoDesk — Event Coordination App*
+
+Dear ${r.name.split(' ')[0]},
+
+Your login for ProtoDesk has been created.
+
+🔗 App link:
+https://biswajitbhattacharjee45.github.io/protodesk
+
+🔐 Your login:
+ID: ${r.loginId}
+Password: ${r.pwd}${guestLine}
+
+📱 After opening:
+• Tap Add to Home Screen to install
+• Keep screen ON during duty
+• Tap green button to share your location
+
+— SBI LHO Guwahati · Protocol Cell`
+    );
+    const waUrl=`https://wa.me/91${r.mobile}?text=${msg}`;
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:.55rem;padding:.45rem .65rem;background:var(--gbg);border:1px solid var(--gbd);border-radius:8px;';
+    row.innerHTML=`<div style="flex:1;min-width:0"><div style="font-size:.72rem;font-weight:700;color:var(--ink)">${r.name}</div><div style="font-size:.6rem;color:var(--ink3)">${r.mobile} · ${ROLES[r.role]?.label||r.role}${r.guestKey?` · ${r.guestName}`:' · Guest TBA'}</div></div>
+      <a href="${waUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:.38rem .75rem;background:var(--green);color:#fff;border-radius:7px;font-size:.65rem;font-weight:800;text-decoration:none;flex-shrink:0;white-space:nowrap">💬 Send WA</a>`;
+    list.appendChild(row);
+  });
+  // Also add "Send All" note
+  const note=document.createElement('div');
+  note.style.cssText='font-size:.62rem;color:var(--ink4);margin-top:.35rem;text-align:center;';
+  note.textContent='Tap each button to open WhatsApp for that person individually';
+  list.appendChild(note);
+}
+
+function exportBulkCredentials(){
+  if(!window.XLSX){showToast('SheetJS not loaded');return;}
+  const rows=_bulkRows.filter(r=>r.status==='done').map(r=>({
+    'Name':r.name,
+    'Role':ROLES[r.role]?.label||r.role,
+    'Mobile':r.mobile||'',
+    'Login ID':r.loginId,
+    'Password':r.pwd,
+    'Assigned Guest':r.guestKey?(window._guests[r.guestKey]?.name||r.guestKey):'Not assigned yet',
+    'App URL':'https://biswajitbhattacharjee45.github.io/protodesk'
+  }));
+  if(!rows.length){showToast('No created users to export');return;}
+  const ws=XLSX.utils.json_to_sheet(rows);
+  // Set column widths
+  ws['!cols']=[{wch:25},{wch:15},{wch:14},{wch:35},{wch:12},{wch:28},{wch:45}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'ProtoDesk Credentials');
+  XLSX.writeFile(wb,'ProtoDesk_User_Credentials.xlsx');
+  showToast('📥 Credentials file downloaded');
+}
+
+/* ── FULLSCREEN PHOTO VIEWER ── */
+function openPhotoViewer(src, name){
+  document.getElementById('photoViewerImg').src=src;
+  document.getElementById('photoViewerName').textContent=name||'';
+  document.getElementById('photoViewer').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closePhotoViewer(){
+  document.getElementById('photoViewer').classList.remove('open');
+  document.getElementById('photoViewerImg').src='';
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePhotoViewer();});
+
+/* ══════════════════════════════════════════════════
+   BULK USER IMPORT
+══════════════════════════════════════════════════ */
+let _bulkRows=[];
+
+function makePwd(){
+  const c='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let p='';for(let i=0;i<8;i++)p+=c[Math.floor(Math.random()*c.length)];
+  return p+'@'+Math.floor(10+Math.random()*90);
+}
+
+function makeLoginId(name,role){
+  const first=(name||'').split(' ')[0].toLowerCase().replace(/[^a-z]/g,'');
+  const roleShort={admin:'adm',executive:'exec',dataentry:'de',protocol:'proto',driver:'drv',agent:'agt'}[role]||'user';
+  return `${first}.${roleShort}@protodesk.sbi`;
+}
+
+function normaliseRole(raw){
+  const r=(raw||'').toLowerCase().trim();
+  if(r.includes('protocol')||r==='proto')return 'protocol';
+  if(r.includes('driver')||r==='drv')return 'driver';
+  if(r.includes('admin')||r==='adm')return 'admin';
+  if(r.includes('exec'))return 'executive';
+  if(r.includes('data')||r.includes('entry'))return 'dataentry';
+  if(r.includes('agent')||r.includes('travel'))return 'agent';
+  return 'protocol'; // default
+}
+
+function parseRows(data){
+  // data = array of objects from SheetJS or CSV parse
+  _bulkRows=[];
+  data.forEach((row,i)=>{
+    const keys=Object.keys(row);
+    const name=(row['Name']||row['name']||row[keys[0]]||'').toString().trim();
+    if(!name||name.toLowerCase()==='name')return; // skip header or empty
+    const roleRaw=(row['Role']||row['role']||row[keys[1]]||'protocol').toString();
+    const role=normaliseRole(roleRaw);
+    const guestRaw=(row['Guest']||row['guest']||row['Assigned Guest']||row[keys[2]]||'').toString().trim();
+    const mobile=(row['Mobile']||row['mobile']||row['Phone']||row[keys[3]]||'').toString().trim();
+    const loginId=makeLoginId(name,role);
+    const pwd=makePwd();
+    _bulkRows.push({name,role,loginId,pwd,guestRaw,mobile,status:'pending'});
+  });
+  renderBulkPreview();
+}
+
+function renderBulkPreview(){
+  const tbody=document.getElementById('bulkTbody');
+  if(!tbody)return;
+  tbody.innerHTML='';
+  _bulkRows.forEach((r,i)=>{
+    // Find guest name from guestRaw (could be key like g1 or name)
+    let guestDisplay=r.guestRaw||'—';
+    if(r.guestRaw){
+      const gByKey=window._guests[r.guestRaw];
+      if(gByKey)guestDisplay=gByKey.name;
+      else{
+        const gByName=Object.entries(window._guests||{}).find(([k,g])=>g.name?.toLowerCase().includes(r.guestRaw.toLowerCase()));
+        if(gByName){r.guestKey=gByName[0];guestDisplay=gByName[1].name;}
+      }
+    }
+    const statusCol=r.status==='done'?'<span style="color:var(--green);font-weight:700">✅ Created</span>':
+      r.status==='error'?`<span style="color:var(--red);font-size:.6rem"">❌ ${r.error||'Error'}</span>`:
+      '<span style="color:var(--ink4)">⏳ Pending</span>';
+    const tr=document.createElement('tr');
+    tr.style.borderBottom='0.5px solid var(--border)';
+    tr.innerHTML=`
+      <td style="padding:5px 8px;font-weight:600;font-size:.7rem">${r.name}</td>
+      <td style="padding:5px 8px"><span style="font-size:.58rem;font-weight:800;padding:2px 6px;border-radius:4px;background:var(--bg);border:1px solid var(--border)">${ROLES[r.role]?.label||r.role}</span></td>
+      <td style="padding:5px 8px;font-family:monospace;font-size:.65rem;color:var(--sky)">${r.loginId}</td>
+      <td style="padding:5px 8px;font-family:monospace;font-size:.65rem;font-weight:700">${r.pwd}</td>
+      <td style="padding:5px 8px;font-size:.65rem">${guestDisplay}</td>
+      <td style="padding:5px 8px" id="bstat-${i}">${statusCol}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('bulkPreview').style.display='block';
+  document.getElementById('bulkProgress').textContent=`${_bulkRows.length} user${_bulkRows.length!==1?'s':''} ready to create`;
+}
+
+async function handleBulkFile(input){
+  const file=input.files[0];if(!file)return;
+  const isCsv=file.name.endsWith('.csv');
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!data.length){showToast('No data found in file');return;}
+      parseRows(data);
+    }catch(err){showToast('Could not read file: '+err.message);}
+  };
+  reader.readAsBinaryString(file);
+}
+
+async function loadGSheet(){
+  const url=document.getElementById('gSheetUrl')?.value.trim();
+  if(!url){showToast('Paste a Google Sheet URL first');return;}
+  // Extract sheet ID
+  const m=url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if(!m){showToast('Invalid Google Sheet URL');return;}
+  const id=m[1];
+  const csvUrl=`https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
+  showToast('⏳ Loading sheet…');
+  try{
+    const res=await fetch(csvUrl);
+    if(!res.ok)throw new Error('Could not load sheet. Make sure it is set to "Anyone with link can view".');
+    const text=await res.text();
+    const wb=XLSX.read(text,{type:'string'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+    if(!data.length){showToast('Sheet appears empty');return;}
+    parseRows(data);
+    showToast('✅ Sheet loaded — '+_bulkRows.length+' users found');
+  }catch(err){showToast('❌ '+err.message);}
+}
+
+async function bulkCreateUsers(){
+  if(!_bulkRows.length){showToast('No users to create');return;}
+  if(!window._fbReady){showToast('Firebase not connected');return;}
+  const btn=document.getElementById('bulkCreateBtn');
+  btn.disabled=true;btn.textContent='⏳ Creating…';
+  let done=0,errors=0;
+  for(let i=0;i<_bulkRows.length;i++){
+    const r=_bulkRows[i];
+    if(r.status==='done')continue;
+    const prog=document.getElementById('bulkProgress');
+    if(prog)prog.textContent=`Creating ${i+1} of ${_bulkRows.length}…`;
+    const statCell=document.getElementById('bstat-'+i);
+    if(statCell)statCell.innerHTML='<span style="color:var(--amber)">⏳ Creating…</span>';
+    try{
+      const cred=await window._fbCreateUser(window._auth,r.loginId,r.pwd);
+      const uid=cred.user.uid;
+      // Resolve guest key
+      let assignedSl=r.guestKey||null;
+      if(!assignedSl&&r.guestRaw){
+        if(window._guests[r.guestRaw])assignedSl=r.guestRaw;
+        else{const found=Object.entries(window._guests||{}).find(([k,g])=>g.name?.toLowerCase().includes(r.guestRaw.toLowerCase()));if(found)assignedSl=found[0];}
+      }
+      await window._set(window._ref(window._db,`users/${uid}`),{
+        name:r.name,role:r.role,loginId:r.loginId,email:r.loginId,
+        pwd:r.pwd,mobile:r.mobile||'',
+        assignedSl:assignedSl||null,assignedEventId:_activeEid||null
+      });
+      r.status='done';r.uid=uid;done++;
+      if(statCell)statCell.innerHTML='<span style="color:var(--green);font-weight:700">✅ Created</span>';
+    }catch(err){
+      r.status='error';
+      r.error=err.code==='auth/email-already-in-use'?'Already exists':err.message;
+      errors++;
+      if(statCell)statCell.innerHTML=`<span style="color:var(--red);font-size:.6rem">❌ ${r.error}</span>`;
+    }
+  }
+  btn.disabled=false;btn.textContent='🚀 Create All Accounts';
+  const prog=document.getElementById('bulkProgress');
+  if(prog)prog.textContent=`Done — ${done} created, ${errors} failed`;
+  if(done>0){
+    document.getElementById('bulkExportBtn').style.display='inline-flex';
+    document.getElementById('bulkWABtn').style.display='inline-flex';
+    showToast(`✅ ${done} accounts created!`);
+    renderUserTable();
+  }
+}
+
+function exportBulkCredentials(){
+  const rows=_bulkRows.filter(r=>r.status==='done').map(r=>({
+    'Name':r.name,'Role':ROLES[r.role]?.label||r.role,
+    'Login ID':r.loginId,'Password':r.pwd,
+    'App URL':'https://biswajitbhattacharjee45.github.io/protodesk'
+  }));
+  if(!rows.length){showToast('No created users to export');return;}
+  const ws=XLSX.utils.json_to_sheet(rows);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Credentials');
+  XLSX.writeFile(wb,'ProtoDesk_User_Credentials.xlsx');
+  showToast('📥 Credentials Excel downloaded');
+}
+
+function copyBulkWA(){
+  const lines=_bulkRows.filter(r=>r.status==='done').map(r=>
+    `👤 *${r.name}* (${ROLES[r.role]?.label||r.role})\nLogin: ${r.loginId}\nPassword: ${r.pwd}\nApp: https://biswajitbhattacharjee45.github.io/protodesk`
+  ).join('\n\n');
+  const msg='🏛 *ProtoDesk Login Credentials*\n\n'+lines+'\n\n— SBI LHO Guwahati · Protocol Cell';
+  navigator.clipboard?.writeText(msg.replace(/\n/g,'\n'))
+    .then(()=>showToast('💬 Copied — paste in WhatsApp'))
+    .catch(()=>showToast('Select and copy the text manually'));
+}
+
+/* ══════════════════════════════════════════════════
+   GUEST IMPORT FROM GOOGLE SHEET / CSV
+   Columns: TYPE | SL | NAME OF THE MP/OFFICIAL | CONTACT |
+   DATE OF ARRIVAL | FLIGHT NO | TIME OF ARRIVAL | CAR NO |
+   DRIVER NAME | DRIVER MOBILE | HOTEL ROOM NO |
+   DATE OF DEPARTURE | FLIGHT NO | TIME OF DEPARTURE |
+   NAME OF PROTOCOL OFFICER | CONTACT NO OF PROTOCOL OFFICER
+══════════════════════════════════════════════════ */
+
+/* Smart flexible column finder — works even if column names change slightly */
+function findCol(row, patterns){
+  const keys=Object.keys(row);
+  for(const pat of patterns){
+    // exact match first
+    if(row[pat]!==undefined&&row[pat]!==null)return row[pat].toString().trim();
+    // case-insensitive partial match
+    const found=keys.find(k=>k.toLowerCase().includes(pat.toLowerCase()));
+    if(found&&row[found]!==undefined)return row[found].toString().trim();
+  }
+  return '';
+}
+
+/* Find all columns matching a pattern — for duplicate column names like FLIGHT NO */
+function findAllCols(row, patterns){
+  const keys=Object.keys(row);
+  const results=[];
+  for(const k of keys){
+    if(patterns.some(p=>k.toLowerCase().includes(p.toLowerCase()))){
+      const v=row[k];
+      if(v!==undefined&&v!==null&&v.toString().trim())results.push(v.toString().trim());
+    }
+  }
+  return results;
+}
+
+/* Skip rows that are not real guests */
+function isSkipRow(name, car){
+  if(!name)return true;
+  const n=name.toLowerCase();
+  const skipWords=['ambulance','control room','doctor','doctors','spare','vehicle only','standby'];
+  if(skipWords.some(w=>n.startsWith(w)||n===w))return true;
+  if(!name&&car)return true; // vehicle with no guest
+  return false;
+}
+
+function mapSheetRowToGuest(row, existingMaxSl){
+  // ── FLEXIBLE NAME DETECTION ───────────────────────────
+  const rawName=findCol(row,['NAME OF THE MP','NAME OF THE OFFICIAL','NAME OF MP','GUEST NAME','NAME','name']);
+  if(isSkipRow(rawName, findCol(row,['CAR NO','CAR','car'])))return null;
+
+  // ── SERIAL NUMBER ─────────────────────────────────────
+  const slRaw=findCol(row,['SL','Sl No','Serial','S.No','SNO']);
+  const sl=parseInt(slRaw)||existingMaxSl+1;
+
+  // ── TYPE / CATEGORY ───────────────────────────────────
+  const type=findCol(row,['TYPE','Type','Category','category']);
+  let category='MP / Member of Parliament';
+  if(type.toUpperCase().includes('OFFICIAL')||type.toUpperCase().includes('OFFICER')||
+     type.toUpperCase().includes('DIR')||type.toUpperCase().includes('SECY')||
+     (!type&&sl>16))category='Director / Officer';
+  if(type.toUpperCase().includes('RAJYA')||type.toUpperCase().includes('LOK'))
+    category='MP / Member of Parliament';
+
+  // ── CONTACT ───────────────────────────────────────────
+  const contact=findCol(row,['CONTACT','contact','Mobile','Phone','TEL']).replace(/\D/g,'').slice(-10);
+
+  // ── ARRIVAL ───────────────────────────────────────────
+  const arrDate=findCol(row,['DATE OF ARRIVAL','ARRIVAL DATE','ARR DATE','Arrival Date']);
+
+  // For duplicate column headers SheetJS appends _1, _2 etc
+  // Get ALL values matching "FLIGHT NO" and "TIME OF" patterns
+  const allFlights=findAllCols(row,['FLIGHT NO','FLIGHT NUMBER','FLIGHT','TRAIN NO']);
+  const allTimes=findAllCols(row,['TIME OF ARRIVAL','TIME OF DEP','ARRIVAL TIME','DEP TIME','TIME']);
+
+  const arrFlight=allFlights[0]||'';
+  const depFlight=allFlights[1]||allFlights[0]||'';
+  const arrTime=formatTime(allTimes[0]||'');
+  const depTime=formatTime(allTimes[1]||allTimes[0]||'');
+
+  // ── DEPARTURE ─────────────────────────────────────────
+  const depDate=findCol(row,['DATE OF DEPARTURE','DEPARTURE DATE','DEP DATE','Departure Date']);
+
+  // ── VEHICLE & DRIVER ──────────────────────────────────
+  const car=findCol(row,['CAR NO','CAR NUMBER','CAR','Vehicle No','VEHICLE']);
+  const driver=findCol(row,['DRIVER NAME','DRIVER','Driver']);
+  const driverMob=findCol(row,['DRIVER MOBILE','DRIVER MOB','DRIVER PHONE','Driver Mobile','Driver Contact']).replace(/\D/g,'').slice(-10);
+
+  // ── HOTEL ─────────────────────────────────────────────
+  const room=findCol(row,['HOTEL ROOM','ROOM NO','ROOM','Hotel Room','Room No']);
+
+  // ── PROTOCOL OFFICER ──────────────────────────────────
+  const proto=findCol(row,['NAME OF PROTOCOL','PROTOCOL OFFICER','PROTOCOL NAME','Protocol Officer']);
+  const protoMob=findCol(row,['CONTACT NO OF PROTOCOL','PROTOCOL CONTACT','PROTOCOL MOBILE','Protocol Mobile','Protocol Contact']).replace(/\D/g,'').slice(-10);
+
+  // ── NAME CLEANING ─────────────────────────────────────
+  const companion=rawName.toLowerCase().includes('with companion');
+  let cleanName=rawName.replace(/\s*with companion\s*/gi,'').trim();
+
+  // Extract designation if name has comma pattern: "Smt Nidhi Chaturvedi, Director"
+  let designation='',party='',state='';
+  if(cleanName.includes(', ')){
+    const parts=cleanName.split(', ');
+    cleanName=parts[0].trim();
+    designation=parts.slice(1).join(', ').trim();
+  }
+
+  if(!cleanName)return null;
+
+  return {
+    sl,name:cleanName,category,designation,party,state,
+    contact,companion,
+    arrDate,arrFlight,arrTime,
+    depDate,depFlight,depTime,
+    car,driver,driverMob,
+    room,proto,protoMob,
+    wk:'',wiki:'',photoUrl:'',special:'',mode:'air'
+  };
+}
+
+function formatTime(raw){
+  // Convert 1120 → 11:20, 745 → 07:45, already formatted just return
+  const s=raw.toString().replace(/[^0-9]/g,'');
+  if(!s)return raw;
+  if(s.length===3)return '0'+s[0]+':'+s.slice(1);
+  if(s.length===4)return s.slice(0,2)+':'+s.slice(2);
+  return raw;
+}
+
+async function importFromGSheet(){
+  const url=document.getElementById('gsImportUrl')?.value.trim();
+  if(!url){showToast('Paste a Google Sheet URL first');return;}
+  const m=url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if(!m){showToast('Invalid Google Sheet URL');return;}
+  const id=m[1];
+  const gid=(url.match(/gid=(\d+)/)||[])[1]||'0';
+  const csvUrl=`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+  setImportStatus('⏳ Fetching sheet…');
+  try{
+    const res=await fetch(csvUrl);
+    if(!res.ok)throw new Error('Cannot access. Set sharing to "Anyone with link can view".');
+    const text=await res.text();
+    processImportCSV(text);
+  }catch(err){setImportStatus('❌ '+err.message,true);}
+}
+
+async function importFromFile(input){
+  const file=input.files[0];if(!file)return;
+  if(!window.XLSX){showToast('SheetJS not loaded — refresh page');return;}
+  setImportStatus('⏳ Reading file…');
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const csv=XLSX.utils.sheet_to_csv(ws);
+      processImportCSV(csv);
+    }catch(err){setImportStatus('❌ '+err.message,true);}
+  };
+  reader.readAsBinaryString(file);
+}
+
+function processImportCSV(csvText){
+  if(!window.XLSX){showToast('SheetJS not loaded');return;}
+  try{
+    const wb=XLSX.read(csvText,{type:'string'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+    if(!rows.length){setImportStatus('❌ No data found in sheet',true);return;}
+
+    // Find max existing SL
+    const existingSls=Object.values(window._guests||{}).map(g=>g.sl||0);
+    let maxSl=existingSls.length?Math.max(...existingSls):0;
+
+    const toImport=[];
+    let skipped=0;
+    rows.forEach(row=>{
+      const g=mapSheetRowToGuest(row,maxSl);
+      if(g){
+        // Check if SL already exists — skip duplicates
+        const exists=Object.values(window._guests||{}).some(eg=>eg.sl===g.sl&&eg.name===g.name);
+        if(!exists){toImport.push(g);maxSl=Math.max(maxSl,g.sl);}
+        else skipped++;
+      }
+    });
+
+    if(!toImport.length){
+      setImportStatus(skipped?`ℹ️ All ${skipped} rows already imported — no new guests found`:'ℹ️ No valid guest rows found. Check column names match the expected format.');
+      return;
+    }
+
+    // Show confirmation with count
+    const skipNote=skipped?` (${skipped} duplicates skipped)`:'';
+    setImportStatus(`✅ Found ${toImport.length} new guests${skipNote}. Importing now…`);
+    importGuestsBatch(toImport);
+  }catch(err){setImportStatus('❌ '+err.message,true);}
+}
+
+async function importGuestsBatch(guests){
+  if(!window._fbReady&&!_activeEid){
+    // Demo mode — just add to local state
+    guests.forEach(g=>{
+      const key='g_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+      window._guests[key]=g;
+      if(_activeEvent)_activeEvent.guests=window._guests;
+    });
+    setImportStatus(`✅ ${guests.length} guests imported (demo mode)`);
+    buildPage('guests');refreshKPIs();return;
+  }
+  if(!_activeEid){showToast('Select an event first');return;}
+  let done=0;
+  for(const g of guests){
+    try{
+      const r=window._push(window._ref(window._db,`events/${_activeEid}/guests`),g);
+      window._guests[r.key]=g;
+      done++;
+    }catch(e){console.error('Import error',e);}
+  }
+  if(_activeEvent)_activeEvent.guests=window._guests;
+  setImportStatus(`✅ ${done} guests imported successfully!`);
+  showToast(`✅ ${done} guests imported!`);
+  buildPage('guests');refreshKPIs();
+}
+
+function setImportStatus(msg,isError=false){
+  const el=document.getElementById('gsImportStatus');
+  if(!el)return;
+  el.style.display='block';
+  el.style.color=isError?'#fca5a5':'rgba(255,255,255,.75)';
+  el.textContent=msg;
+}
 </script>
 
 <!-- Fullscreen photo viewer -->
