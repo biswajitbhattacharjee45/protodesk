@@ -381,14 +381,18 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
 .gc-dot.arr{background:#4ade80;}.gc-dot.dep{background:#60a5fa;}.gc-dot.pend{background:#fde68a;}.gc-dot.nos{background:#f87171;}.gc-dot.none{background:rgba(255,255,255,.25);}
 .gc-body{padding:.48rem .5rem .52rem;text-align:center;}
 .gc-name{font-size:.68rem;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-.gc-name-mygst{color:#ffffff !important;font-weight:800 !important;text-shadow:0 0 18px rgba(196,181,253,.9),0 0 36px rgba(139,92,246,.6) !important;}
-.gc-cat-mygst{color:rgba(196,181,253,.8) !important;}
-.gc-room-mygst{color:rgba(196,181,253,.7) !important;}
-/* CSS-only guarantee: any gcard with dark bg gets white text */
-.gcard.my-guest-card .gc-name{color:#ffffff !important;font-weight:800 !important;text-shadow:0 0 18px rgba(196,181,253,.9),0 0 36px rgba(139,92,246,.6) !important;}
-.gcard.my-guest-card .gc-cat{color:rgba(196,181,253,.8) !important;}
-.gcard.my-guest-card .gc-room{color:rgba(196,181,253,.7) !important;}
-.gcard.my-guest-card .gc-slbl{background:rgba(255,255,255,.15) !important;color:#fff !important;}
+/* MY GUEST CARD — white glowing text on dark purple bg */
+.gcard.my-guest-card .gc-name,
+.gcard.my-guest-card .gc-name *{
+  color:#ffffff !important;
+  font-weight:800 !important;
+  text-shadow:0 0 16px rgba(196,181,253,1),0 0 32px rgba(167,139,250,.8),0 0 60px rgba(139,92,246,.5) !important;
+}
+.gcard.my-guest-card .gc-body{background:transparent !important;}
+.gcard.my-guest-card .gc-cat{color:rgba(196,181,253,.85) !important;}
+.gcard.my-guest-card .gc-room{color:rgba(196,181,253,.75) !important;font-family:'DM Mono',monospace;}
+.gcard.my-guest-card .gc-slbl{background:rgba(255,255,255,.12) !important;color:#e9d5ff !important;}
+.gcard.my-guest-card .ctag{background:rgba(255,255,255,.15) !important;color:#e9d5ff !important;border-color:rgba(255,255,255,.2) !important;}
 .gc-cat{font-size:.58rem;color:rgba(167,139,250,.7);margin-bottom:.22rem;}
 .gc-slbl{font-size:.56rem;font-weight:800;padding:1px 5px;border-radius:4px;display:inline-block;}
 .gc-slbl.arr{background:var(--gbg);color:var(--green);}.gc-slbl.dep{background:var(--bbg);color:var(--blue);}.gc-slbl.pend{background:#fffbeb;color:#b45309;}.gc-slbl.nos{background:#fff1f2;color:var(--red);}.gc-slbl.none{background:var(--bg);color:var(--ink4);}
@@ -1698,25 +1702,38 @@ function applyFilters(){
   const grid=document.getElementById('cgrid');if(!grid)return;grid.innerHTML='';
   if(!_filtered.length){grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ei">🔍</div><p>No guests found</p>${can('entry')&&!gl().length?'<button class="btn-pri" onclick="openGF(null)" style="margin-top:.75rem">➕ Add First Guest</button>':''}</div>`;return;}
   _filtered.forEach((g,i)=>{const card=makeGCard(g);card.style.animationDelay=(i*.022)+'s';grid.appendChild(card);});
-  // POST-RENDER PASS: force white text on my guest card regardless of isMyG logic
+  // POST-RENDER: find my guest card by ALL possible methods and force white text
   setTimeout(()=>{
     const cu=window._cu;
-    if(!cu||!cu.assignedSl)return;
-    // Find card by data-key matching assignedSl directly
-    const myCard=grid.querySelector(`[data-key="${cu.assignedSl}"]`);
-    if(myCard){
-      myCard.classList.add('my-guest-card');
-      myCard.style.background='linear-gradient(145deg,#2d1158,#1e0a3c)';
-      myCard.style.border='1.5px solid rgba(196,181,253,.5)';
-      myCard.style.boxShadow='0 0 0 3px rgba(139,92,246,.15),0 8px 32px rgba(109,40,217,.3),0 0 60px rgba(139,92,246,.15)';
-      const nm=myCard.querySelector('.gc-name');
-      if(nm){nm.style.cssText='color:#ffffff !important;font-weight:800;text-shadow:0 0 18px rgba(196,181,253,.9),0 0 36px rgba(139,92,246,.5);font-size:.68rem;line-height:1.3;margin-bottom:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;';}
-      const cat=myCard.querySelector('.gc-cat');
-      if(cat)cat.style.cssText='color:rgba(196,181,253,.8) !important;font-size:.58rem;';
-      const rm=myCard.querySelector('.gc-room');
-      if(rm)rm.style.cssText='color:rgba(196,181,253,.7) !important;font-size:.56rem;font-family:"DM Mono",monospace;margin-top:2px;';
-    }
-  },50);
+    if(!cu||cu.role!=='protocol')return;
+    // Try every card — find the one matching by key, sl, or proto name
+    const allCards=grid.querySelectorAll('.gcard');
+    allCards.forEach(card=>{
+      const key=card.dataset.key;
+      const g=window._guests[key];
+      if(!g)return;
+      const matched=
+        (cu.assignedSl&&cu.assignedSl===key)||
+        (cu.assignedSl&&g.sl&&String(cu.assignedSl)===String(g.sl))||
+        (cu.name&&g.proto&&g.proto.toLowerCase().includes(cu.name.toLowerCase().split(' ')[0]))||
+        (cu.mobile&&g.protoMob&&g.protoMob.replace(/\D/g,'').slice(-10)===cu.mobile.replace(/\D/g,'').slice(-10));
+      if(matched){
+        card.style.cssText+='background:linear-gradient(145deg,#2d1158,#1e0a3c) !important;border:1.5px solid rgba(196,181,253,.5) !important;box-shadow:0 8px 32px rgba(109,40,217,.35) !important;';
+        const nm=card.querySelector('.gc-name');
+        if(nm){
+          nm.style.setProperty('color','#ffffff','important');
+          nm.style.setProperty('text-shadow','0 0 20px rgba(196,181,253,1),0 0 40px rgba(139,92,246,.7)','important');
+          nm.style.setProperty('font-weight','800','important');
+        }
+        const cat=card.querySelector('.gc-cat');
+        if(cat)cat.style.setProperty('color','rgba(196,181,253,.85)','important');
+        const rm=card.querySelector('.gc-room');
+        if(rm)rm.style.setProperty('color','rgba(196,181,253,.75)','important');
+        const sl=card.querySelector('.gc-sl');
+        if(sl)sl.style.setProperty('color','rgba(196,181,253,.9)','important');
+      }
+    });
+  },100);
 }
 function makeGCard(g){
   const s=gst(g._key);const m=SM[s]||SM.none;
