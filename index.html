@@ -1775,6 +1775,15 @@ function makeGCard(g){
   function showPhoto(src){img.src=src;img.onload=()=>{img.style.display='block';img.classList.add('pfade');init.style.display='none';};}
   if(photoSrc){showPhoto(photoSrc);}
   else if(wkKey){getPhoto(wkKey).then(s=>{if(s)showPhoto(s);});}
+  // DIRECT FIX: if this is my guest card, force white text NOW
+  if(isMyG){
+    const nm=card.querySelector('.gc-name');
+    const cat=card.querySelector('.gc-cat');
+    const rm=card.querySelector('.gc-room');
+    if(nm){nm.setAttribute('style','color:#ffffff !important;font-size:.68rem;font-weight:800;line-height:1.3;margin-bottom:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-shadow:0 0 20px #c4b5fd,0 0 40px #a78bfa;');}
+    if(cat){cat.setAttribute('style','color:rgba(196,181,253,.85);font-size:.58rem;margin-bottom:.22rem;');}
+    if(rm){rm.setAttribute('style','color:rgba(196,181,253,.75);font-size:.56rem;font-family:DM Mono,monospace;margin-top:2px;');}
+  }
   return card;
 }
 
