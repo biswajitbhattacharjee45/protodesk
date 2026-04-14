@@ -713,8 +713,8 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#060f1
     <div class="l-divider"></div>
     <div class="lform">
       <div>
-        <label class="lfl">Mobile Number (Login ID)</label>
-        <input class="lfi" type="tel" id="lEmail" placeholder="10-digit mobile number" autocomplete="username" maxlength="10" pattern="[0-9]*" inputmode="numeric">
+        <label class="lfl">Mobile Number / Login ID</label>
+        <input class="lfi" type="text" id="lEmail" placeholder="Mobile number or email (admin)" autocomplete="username" inputmode="text">
       </div>
       <div>
         <label class="lfl">Password</label>
@@ -1078,15 +1078,21 @@ function doLoginBtn(){
   });
 }
 async function doLogin(){
-  let mobile=document.getElementById('lEmail').value.trim().replace(/\D/g,'');
+  const rawInput=document.getElementById('lEmail').value.trim();
   const pass=document.getElementById('lPass').value;
   const err=document.getElementById('lErr');err.classList.remove('show');
-  if(!mobile||!pass){err.textContent='Please enter your mobile number and password.';err.classList.add('show');return;}
-  if(mobile.length<10){err.textContent='Enter your 10-digit mobile number.';err.classList.add('show');return;}
-  if(mobile.length>10)mobile=mobile.slice(-10);
-  // Admin logins use email directly — detect by @ symbol
-  const rawInput=document.getElementById('lEmail').value.trim();
-  const loginEmail=rawInput.includes('@')?rawInput:mobile+'@protodesk.sbi';
+  if(!rawInput||!pass){err.textContent='Please enter your login ID and password.';err.classList.add('show');return;}
+  // Detect login type: email (admin) vs mobile number (staff)
+  let loginEmail;
+  if(rawInput.includes('@')){
+    // Admin — use email directly
+    loginEmail=rawInput;
+  } else {
+    // Staff — treat as mobile number
+    const mobile=rawInput.replace(/\D/g,'').slice(-10);
+    if(mobile.length<10){err.textContent='Enter your 10-digit mobile number.';err.classList.add('show');return;}
+    loginEmail=mobile+'@protodesk.sbi';
+  }
   if(!window._auth){err.textContent='Firebase not connected — check your internet connection.';err.classList.add('show');return;}
   try{await window._fbSignIn(window._auth,loginEmail,pass);}
   catch(e){
@@ -1302,7 +1308,7 @@ function markSt(key,status){
   if(!key||!can('status'))return;
   const u=window._cu;
   if(!can('allg')&&u.assignedSl!==key){
-    showToast('⚠️ You can only update status for your assigned guest');return;
+    showToast('⚠️ You can only update your assigned guest',3000);return;
   }
   window._statuses[key]={status};
   if(_activeEvent)_activeEvent.statuses=window._statuses;
@@ -2282,7 +2288,7 @@ function showFieldMessage(text,from){
    TOAST
 ══════════════════════════════════════════════════ */
 let _tt;
-function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2800);}
+function showToast(msg,duration=2800){const el=document.getElementById('toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),duration);}
 
 /* ── FULLSCREEN PHOTO VIEWER ── */
 function openPhotoViewer(src, name){
