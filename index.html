@@ -50,6 +50,16 @@ window._fbSignIn=signInWithEmailAndPassword;window._fbSignOut=signOut;window._fb
 window._fbReady=false;
 
 // Auth state
+// Safe callers — module scope cannot directly call plain script functions
+// Use window[] access + setTimeout to ensure plain script has executed first
+function _callWhenReady(fnName){
+  const attempt=()=>{
+    if(typeof window[fnName]==='function'){window[fnName]();}
+    else{setTimeout(()=>attempt(),100);}
+  };
+  setTimeout(attempt,0);
+}
+
 onAuthStateChanged(auth,async user=>{
   if(user){
     onValue(ref(db,`users/${user.uid}`),snap=>{
@@ -58,20 +68,22 @@ onAuthStateChanged(auth,async user=>{
         // Profile found — normal login
         window._cu={uid:user.uid,email:user.email,...p};
         window._fbReady=true;
-        bootApp();
+        _callWhenReady('bootApp');
       } else {
-        // Profile not yet in database — create a basic admin profile
-        // This handles the case where Firebase Auth user exists but DB profile wasn't saved
+        // Profile not in database yet — auto-create basic admin profile
         const fallback={uid:user.uid,email:user.email,name:user.email.split('@')[0],role:'admin',assignedSl:null,assignedEventId:null};
         set(ref(db,`users/${user.uid}`),fallback).then(()=>{
-          window._cu={...fallback};window._fbReady=true;bootApp();
+          window._cu={...fallback};window._fbReady=true;
+          _callWhenReady('bootApp');
         }).catch(()=>{
-          // Even if DB write fails, let the user in as admin
-          window._cu={...fallback};window._fbReady=true;bootApp();
+          window._cu={...fallback};window._fbReady=true;
+          _callWhenReady('bootApp');
         });
       }
     },{onlyOnce:true});
-  } else {window._cu=null;showLoginScreen();}
+  } else {
+    _callWhenReady('showLoginScreen');
+  }
 });
 
 // Live subscriptions (active after event is selected)
