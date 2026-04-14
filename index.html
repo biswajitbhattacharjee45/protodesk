@@ -1720,7 +1720,7 @@ function buildAdmin(){
   const um=document.createElement('div');um.className='sec';
   um.innerHTML=`<div class="sec-head"><div class="sec-title">👥 User Management</div></div>
   <div class="sec-body">
-    <div style="overflow-x:auto;margin-bottom:.8rem"><table class="utbl"><thead><tr><th>Name</th><th>Role</th><th>Password</th><th>Assigned Guest</th><th>Action</th></tr></thead><tbody id="userTbody"></tbody></table></div>
+    <div style="overflow-x:auto;margin-bottom:.8rem"><table class="utbl"><thead><tr><th>Name / Mobile</th><th>Role</th><th>Assigned Guest</th><th>Actions</th></tr></thead><tbody id="userTbody"></tbody></table></div>
     <div style="border-top:1px solid var(--border);padding-top:.8rem">
       <div style="font-size:.68rem;font-weight:800;color:var(--ink2);margin-bottom:.65rem">➕ Add New User</div>
       <div style="background:var(--bg);border-radius:10px;padding:.85rem;border:1px solid var(--border)">
@@ -1867,25 +1867,42 @@ function renderUserTable(){
   const tbody=document.getElementById('userTbody');if(!tbody)return;tbody.innerHTML='';
   const users=Object.keys(window._usersDB).length>0?window._usersDB:{};
   if(!Object.keys(users).length){
-    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:1rem;font-size:.7rem;color:var(--ink4)">No users yet. Add your first user below.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:1rem;font-size:.7rem;color:var(--ink4)">No users yet. Add your first user below.</td></tr>';
     return;
   }
+  const guestOpts='<option value="">— Not assigned —</option>'+
+    Object.entries(window._guests||{}).map(([k,g])=>`<option value="${k}">#${g.sl||''} ${g.name}</option>`).join('');
+
   Object.entries(users).forEach(([uid,u])=>{
-    const gName=u.assignedSl?window._guests[u.assignedSl]?.name||u.assignedSl:'—';
+    const gName=u.assignedSl?(window._guests[u.assignedSl]?.name||u.assignedSl):'Not assigned';
     const mob10=(u.mobile||'').replace(/\D/g,'').slice(-10);
     const waMsg=mob10?encodeURIComponent(
       `🏛 *ProtoDesk — Event Coordination App*\n\nDear ${(u.name||'').split(' ')[0]},\n\nYour ProtoDesk login:\n\n🔗 https://biswajitbhattacharjee45.github.io/protodesk\n\n📱 Mobile: ${mob10}\nPassword: ${u.pwd||'(set by admin)'}\n\n⚠️ Change password on first login.\n\n— SBI LHO Guwahati · Protocol Cell`
     ):'';
     const waUrl=mob10?`https://wa.me/91${mob10}?text=${waMsg}`:'';
+    const isDemo=uid.startsWith('d-');
     const tr=document.createElement('tr');
+    tr.id='urow-'+uid;
     tr.innerHTML=`
-      <td><div style="font-weight:700;font-size:.72rem">${u.name||'—'}</div><div style="font-size:.6rem;color:var(--ink3);font-family:monospace">${mob10||u.loginId||'—'}</div></td>
-      <td><select class="rsel" onchange="updateRole('${uid}',this.value)">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}"${k===u.role?' selected':''}>${v.label}</option>`).join('')}</select></td>
-      <td><div style="font-family:monospace;font-size:.65rem;background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">${u.pwd||'—'}</div></td>
-      <td style="font-size:.68rem">${gName}</td>
-      <td style="display:flex;gap:.3rem;align-items:center;flex-wrap:wrap">
-        ${waUrl?`<a href="${waUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:#16a34a;color:#fff;border-radius:6px;font-size:.6rem;font-weight:800;text-decoration:none;white-space:nowrap">💬 WA</a>`:''}
-        ${uid.startsWith('d-')?'<span style="font-size:.58rem;color:var(--ink4)">Demo</span>':`<button class="btn-danger" onclick="deleteUser('${uid}')" style="padding:3px 8px;font-size:.6rem">🗑</button>`}
+      <td>
+        <div style="font-weight:700;font-size:.74rem;color:var(--ink)">${u.name||'—'}</div>
+        <div style="font-size:.62rem;color:var(--ink3);font-family:monospace;margin-top:1px">${mob10||u.loginId||'—'}</div>
+      </td>
+      <td>
+        <select class="rsel" onchange="updateRole('${uid}',this.value)" ${isDemo?'disabled':''}>
+          ${Object.entries(ROLES).map(([k,v])=>`<option value="${k}"${k===u.role?' selected':''}>${v.label}</option>`).join('')}
+        </select>
+      </td>
+      <td style="font-size:.7rem;color:${u.assignedSl?'var(--ink)':'var(--ink4)'}">${gName}</td>
+      <td style="white-space:nowrap">
+        <div style="display:flex;gap:.3rem;align-items:center">
+          ${waUrl?`<a href="${waUrl}" target="_blank" title="Send via WhatsApp" style="display:inline-flex;align-items:center;gap:3px;padding:4px 8px;background:#16a34a;color:#fff;border-radius:6px;font-size:.6rem;font-weight:800;text-decoration:none">💬</a>`:''}
+          ${isDemo
+            ?'<span style="font-size:.58rem;color:var(--ink4)">Demo</span>'
+            :`<button onclick="openEditUser('${uid}')" title="Edit user" style="padding:4px 9px;border-radius:6px;border:1.5px solid var(--border);background:var(--bg);font-size:.62rem;font-weight:700;cursor:pointer;color:var(--ink2)">✏️ Edit</button>
+              <button onclick="deleteUser('${uid}')" title="Delete user" style="padding:4px 8px;border-radius:6px;border:1.5px solid #fecaca;background:#fff1f2;font-size:.6rem;font-weight:700;cursor:pointer;color:#dc2626">🗑</button>`
+          }
+        </div>
       </td>`;
     tbody.appendChild(tr);
   });
@@ -2851,6 +2868,56 @@ async function submitForcedPwdChange(){
     }
   }
 }
+
+/* ── EDIT USER ── */
+function openEditUser(uid){
+  const u=window._usersDB[uid];if(!u)return;
+  document.getElementById('euUid').value=uid;
+  document.getElementById('euName').value=u.name||'';
+  document.getElementById('euMob').value=(u.mobile||'').replace(/\D/g,'').slice(-10);
+  document.getElementById('euPwd').value='';
+  document.getElementById('euStatus').innerHTML='';
+  // Populate role dropdown
+  const roleEl=document.getElementById('euRole');
+  roleEl.innerHTML=Object.entries(ROLES).map(([k,v])=>`<option value="${k}"${k===u.role?' selected':''}>${v.label}</option>`).join('');
+  // Populate guest dropdown
+  const guestEl=document.getElementById('euGuest');
+  guestEl.innerHTML='<option value="">— Not assigned —</option>'+
+    Object.entries(window._guests||{}).map(([k,g])=>
+      `<option value="${k}"${k===u.assignedSl?' selected':''}>#${g.sl||''} ${g.name}</option>`
+    ).join('');
+  document.getElementById('editUserModal').classList.add('open');
+}
+function closeEditUser(){document.getElementById('editUserModal').classList.remove('open');}
+
+async function saveEditUser(){
+  const uid=document.getElementById('euUid').value;
+  const name=document.getElementById('euName').value.trim();
+  const mob=document.getElementById('euMob').value.trim().replace(/\D/g,'').slice(-10);
+  const role=document.getElementById('euRole').value;
+  const guest=document.getElementById('euGuest').value;
+  const pwd=document.getElementById('euPwd').value.trim();
+  const stat=document.getElementById('euStatus');
+
+  if(!name){showToast('Name is required');return;}
+  if(!window._fbReady){showToast('Firebase required');return;}
+
+  stat.innerHTML='<span style="color:var(--blue)">⏳ Saving…</span>';
+
+  const updates={name,role,assignedSl:guest||null};
+  if(mob)updates.mobile=mob;
+  if(pwd&&pwd.length>=6)updates.pwd=pwd;
+  if(guest)updates.assignedEventId=_activeEid||null;
+
+  try{
+    await window._update(window._ref(window._db,`users/${uid}`),updates);
+    stat.innerHTML='<span style="color:var(--green)">✅ Saved successfully!</span>';
+    showToast('✅ User updated');
+    setTimeout(()=>{closeEditUser();renderUserTable();},800);
+  }catch(e){
+    stat.innerHTML='<span style="color:var(--red)">❌ Error saving. Try again.</span>';
+  }
+}
 </script>
 
 <!-- Forced Password Change Modal -->
@@ -2874,6 +2941,49 @@ async function submitForcedPwdChange(){
       <button onclick="submitForcedPwdChange()" style="width:100%;padding:.9rem;border:none;border-radius:12px;background:linear-gradient(135deg,#0b1d3a,#1a3463);color:#fff;font-size:.95rem;font-weight:700;font-family:'Sora',sans-serif;cursor:pointer;">Save Password & Continue →</button>
       <div style="font-size:.62rem;color:#94a3b8;text-align:center;">Your login ID: <span id="fcpLoginId" style="font-family:monospace;font-weight:700;color:#334155;"></span></div>
     </div>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal-ov" id="editUserModal">
+  <div class="modal-box" style="max-width:480px">
+    <button class="modal-close" onclick="closeEditUser()">✕</button>
+    <div class="modal-title">✏️ Edit User</div>
+    <div class="modal-sub">Update name, mobile, role or guest assignment</div>
+    <input type="hidden" id="euUid">
+    <div class="frow2" style="gap:.65rem;margin-bottom:.65rem">
+      <div class="fgroup full">
+        <label class="flabel">Full Name</label>
+        <input class="finput" id="euName" placeholder="Full name">
+      </div>
+      <div class="fgroup">
+        <label class="flabel">Mobile Number</label>
+        <input class="finput" id="euMob" placeholder="10-digit mobile" maxlength="10" inputmode="numeric">
+      </div>
+      <div class="fgroup">
+        <label class="flabel">Role</label>
+        <select class="fsel" id="euRole"></select>
+      </div>
+      <div class="fgroup full">
+        <label class="flabel">Assigned Guest</label>
+        <select class="fsel" id="euGuest">
+          <option value="">— Not assigned —</option>
+        </select>
+        <span style="font-size:.6rem;color:var(--ink3);margin-top:3px;display:block">Select the guest this person is responsible for</span>
+      </div>
+      <div class="fgroup full">
+        <label class="flabel">Reset Password (leave blank to keep current)</label>
+        <div style="display:flex;gap:.3rem">
+          <input class="finput" id="euPwd" placeholder="New password (optional)" style="flex:1">
+          <button class="btn-sec" onclick="document.getElementById('euPwd').value=makePwd()" style="flex-shrink:0;white-space:nowrap">🎲</button>
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-sec" onclick="closeEditUser()">Cancel</button>
+      <button class="btn-pri" onclick="saveEditUser()">💾 Save Changes</button>
+    </div>
+    <div id="euStatus" style="font-size:.68rem;margin-top:.5rem;text-align:center"></div>
   </div>
 </div>
 
