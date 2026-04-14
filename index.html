@@ -154,11 +154,12 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 }
 .login-box{
   background:#ffffff;
-  border-radius:24px;padding:2.5rem 2.2rem 2rem;
+  border-radius:24px;padding:2.5rem 2.2rem 1.5rem;
   width:min(420px,100%);
   box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06);
   animation:lpop .5s cubic-bezier(.22,.68,0,1.2);
   position:relative;z-index:1;
+  overflow:hidden;
 }
 @keyframes lpop{from{opacity:0;transform:translateY(24px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
 .l-logo-wrap{text-align:center;margin-bottom:1.6rem;}
@@ -196,12 +197,17 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 .lbtn:active{transform:translateY(0);}
 .lerr{font-size:.75rem;color:var(--red);background:#fff1f2;border:1px solid #fecaca;border-radius:8px;padding:.45rem .75rem;text-align:center;display:none;}
 .lerr.show{display:block;}
-.demo-area{margin-top:.9rem;padding-top:.9rem;border-top:1px dashed #e2e8f0;}
+.demo-area{
+  margin:1rem -2.2rem -1.5rem;
+  padding:.75rem 2.2rem 1.2rem;
+  background:#f8fafc;
+  border-top:1px solid #e9ecef;
+}
 .demo-lbl{font-size:.58rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;text-align:center;margin-bottom:.45rem;}
 .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;}
 .dbtn{
   padding:.5rem .5rem;border-radius:8px;
-  border:1px solid #e2e8f0;background:#f8fafc;
+  border:1px solid #e2e8f0;background:#fff;
   font-size:.65rem;font-weight:700;cursor:pointer;
   color:#64748b;font-family:'Sora',sans-serif;
   text-align:center;transition:all .18s;
@@ -703,13 +709,13 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
         <input class="lfi" type="password" id="lPass" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <div class="lerr" id="lErr"></div>
-      <button class="lbtn" id="lBtn" onclick="doLoginBtn()">Sign In →</button>
+      <button class="lbtn" id="lBtn">Sign In →</button>
     </div>
     <div class="demo-area">
       <div class="demo-lbl">Demo — explore without login</div>
       <div class="demo-grid">
-        <button class="dbtn" onclick="demoLogin('admin')">🔑 Admin</button>
-        <button class="dbtn" onclick="demoLogin('executive')">📊 Executive</button>
+        <button class="dbtn" id="demoAdminBtn">🔑 Admin</button>
+        <button class="dbtn" id="demoExecBtn">📊 Executive</button>
       </div>
     </div>
   </div>
@@ -2905,6 +2911,21 @@ function setImportStatus(msg,isError=false){
   el.style.color=isError?'#fca5a5':'rgba(255,255,255,.75)';
   el.textContent=msg;
 }
+
+/* ── ATTACH EVENT LISTENERS (avoids onclick scope issues) ── */
+document.addEventListener('DOMContentLoaded',function(){
+  // Login button
+  const lBtn=document.getElementById('lBtn');
+  if(lBtn)lBtn.addEventListener('click',doLoginBtn);
+  // Enter key on password field
+  const lPass=document.getElementById('lPass');
+  if(lPass)lPass.addEventListener('keydown',function(e){if(e.key==='Enter')doLoginBtn();});
+  // Demo buttons
+  const dAdm=document.getElementById('demoAdminBtn');
+  if(dAdm)dAdm.addEventListener('click',function(){demoLogin('admin');});
+  const dExc=document.getElementById('demoExecBtn');
+  if(dExc)dExc.addEventListener('click',function(){demoLogin('executive');});
+});
 </script>
 
 <!-- Fullscreen photo viewer -->
