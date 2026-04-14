@@ -54,7 +54,22 @@ onAuthStateChanged(auth,async user=>{
   if(user){
     onValue(ref(db,`users/${user.uid}`),snap=>{
       const p=snap.val();
-      if(p){window._cu={uid:user.uid,email:user.email,...p};window._fbReady=true;bootApp();}
+      if(p){
+        // Profile found — normal login
+        window._cu={uid:user.uid,email:user.email,...p};
+        window._fbReady=true;
+        bootApp();
+      } else {
+        // Profile not yet in database — create a basic admin profile
+        // This handles the case where Firebase Auth user exists but DB profile wasn't saved
+        const fallback={uid:user.uid,email:user.email,name:user.email.split('@')[0],role:'admin',assignedSl:null,assignedEventId:null};
+        set(ref(db,`users/${user.uid}`),fallback).then(()=>{
+          window._cu={...fallback};window._fbReady=true;bootApp();
+        }).catch(()=>{
+          // Even if DB write fails, let the user in as admin
+          window._cu={...fallback};window._fbReady=true;bootApp();
+        });
+      }
     },{onlyOnce:true});
   } else {window._cu=null;showLoginScreen();}
 });
@@ -126,10 +141,10 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
   pointer-events:none;
 }
 .login-box{
-  background:rgba(255,255,255,.97);
-  border-radius:24px;padding:2.5rem 2.2rem;
+  background:#ffffff;
+  border-radius:24px;padding:2.5rem 2.2rem 2rem;
   width:min(420px,100%);
-  box-shadow:0 32px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.08);
+  box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06);
   animation:lpop .5s cubic-bezier(.22,.68,0,1.2);
   position:relative;z-index:1;
 }
@@ -169,17 +184,17 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 .lbtn:active{transform:translateY(0);}
 .lerr{font-size:.75rem;color:var(--red);background:#fff1f2;border:1px solid #fecaca;border-radius:8px;padding:.45rem .75rem;text-align:center;display:none;}
 .lerr.show{display:block;}
-.demo-area{margin-top:1.1rem;padding-top:1rem;border-top:1px solid var(--border);}
-.demo-lbl{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);text-align:center;margin-bottom:.5rem;}
-.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;}
+.demo-area{margin-top:.9rem;padding-top:.9rem;border-top:1px dashed #e2e8f0;}
+.demo-lbl{font-size:.58rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;text-align:center;margin-bottom:.45rem;}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;}
 .dbtn{
-  padding:.55rem .5rem;border-radius:9px;
-  border:1.5px solid var(--border);background:var(--bg);
-  font-size:.68rem;font-weight:700;cursor:pointer;
-  color:var(--ink2);font-family:'Sora',sans-serif;
+  padding:.5rem .5rem;border-radius:8px;
+  border:1px solid #e2e8f0;background:#f8fafc;
+  font-size:.65rem;font-weight:700;cursor:pointer;
+  color:#64748b;font-family:'Sora',sans-serif;
   text-align:center;transition:all .18s;
 }
-.dbtn:hover{border-color:var(--navy);background:var(--navy);color:#fff;}
+.dbtn:hover{border-color:#0b1d3a;background:#0b1d3a;color:#fff;}
 
 /* ══════════════════════════════════════════════════
    SHARED HEADER
@@ -676,7 +691,7 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
         <input class="lfi" type="password" id="lPass" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <div class="lerr" id="lErr"></div>
-      <button class="lbtn" onclick="doLogin()">Sign In →</button>
+      <button class="lbtn" id="lBtn" onclick="doLoginBtn()">Sign In →</button>
     </div>
     <div class="demo-area">
       <div class="demo-lbl">Demo — explore without login</div>
@@ -1025,13 +1040,30 @@ function demoLogin(role){
   window._fbReady=false;
   bootApp();
 }
+function doLoginBtn(){
+  const btn=document.getElementById('lBtn');
+  if(btn){btn.textContent='Signing in…';btn.disabled=true;}
+  doLogin().finally(()=>{
+    if(btn){btn.textContent='Sign In →';btn.disabled=false;}
+  });
+}
 async function doLogin(){
   const email=document.getElementById('lEmail').value.trim();
   const pass=document.getElementById('lPass').value;
   const err=document.getElementById('lErr');err.classList.remove('show');
-  if(!window._auth){err.textContent='Firebase not configured. Use demo buttons.';err.classList.add('show');return;}
+  if(!email||!pass){err.textContent='Please enter your login ID and password.';err.classList.add('show');return;}
+  if(!window._auth){err.textContent='Firebase not connected — check your internet connection.';err.classList.add('show');return;}
   try{await window._fbSignIn(window._auth,email,pass);}
-  catch(e){err.textContent='Invalid credentials.';err.classList.add('show');}
+  catch(e){
+    let msg='Invalid email or password. Please try again.';
+    if(e.code==='auth/user-not-found')msg='No account found with this login ID.';
+    if(e.code==='auth/wrong-password')msg='Incorrect password. Please try again.';
+    if(e.code==='auth/invalid-email')msg='Invalid login ID format.';
+    if(e.code==='auth/too-many-requests')msg='Too many attempts. Try again in a few minutes.';
+    if(e.code==='auth/network-request-failed')msg='Network error. Check your internet connection.';
+    if(e.code==='auth/invalid-credential')msg='Incorrect login ID or password.';
+    err.textContent=msg;err.classList.add('show');
+  }
 }
 async function doLogout(){
   if(window._fbReady&&window._auth)await window._fbSignOut(window._auth);
