@@ -1926,7 +1926,7 @@ async function addUser(){
   if(!r){showToast('Select a role');return;}
   if(!e){showToast('Login ID is required');return;}
   if(!pwd||pwd.length<6){showToast('Password must be at least 6 characters');return;}
-  if((r==='protocol'||r==='driver')&&!sl){showToast('Please assign a guest for this role');return;}
+  // Guest assignment is optional — can be done later
   if(!window._fbReady){showToast('Firebase not connected');return;}
   if(stat)stat.innerHTML='<span style="color:var(--blue)">⏳ Creating account…</span>';
   try{
