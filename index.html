@@ -23,7 +23,7 @@ const _lk=document.createElement('link');_lk.rel='manifest';_lk.href=URL.createO
 <!-- Firebase -->
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged,createUserWithEmailAndPassword,deleteUser as fbDeleteUser}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import{getDatabase,ref,set,onValue,update,push,remove,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // ══ FIREBASE CONFIG — sbi-vehicle-tracker ════════════
@@ -45,7 +45,7 @@ const db=getDatabase(app);
 window._auth=auth;window._db=db;
 window._ref=ref;window._set=set;window._update=update;
 window._push=push;window._remove=remove;window._get=get;
-window._fbSignIn=signInWithEmailAndPassword;window._fbSignOut=signOut;
+window._fbSignIn=signInWithEmailAndPassword;window._fbSignOut=signOut;window._fbCreateUser=createUserWithEmailAndPassword;window._fbDeleteUser=fbDeleteUser;
 window._fbReady=false;
 
 // Auth state
@@ -169,6 +169,13 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
 .ntab{background:transparent;border:none;color:rgba(255,255,255,.38);padding:4px 8px;border-radius:5px;font-size:.59rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Sora',sans-serif;white-space:nowrap;}
 .ntab:hover{color:rgba(255,255,255,.72);}
 .ntab.on{background:var(--saffron);color:#fff;}
+/* Mobile nav row */
+.mob-nav{display:none;background:var(--navy);border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0;}
+.mob-nav::-webkit-scrollbar{display:none;}
+.mob-nav-inner{display:flex;gap:2px;padding:5px 8px;min-width:max-content;}
+.mob-ntab{background:transparent;border:none;color:rgba(255,255,255,.45);padding:6px 12px;border-radius:6px;font-size:.62rem;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;transition:all .2s;}
+.mob-ntab.on{background:var(--saffron);color:#fff;}
+.mob-ntab:active{opacity:.7;}
 
 /* ══════════════════════════════════════════════════
    DESKTOP APP (admin / executive / dataentry)
@@ -572,9 +579,19 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
   .admin-grid{grid-template-columns:1fr;}
   .frow2,.frow3{grid-template-columns:1fr;}
   .cgrid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}
+  /* Hide desktop nav tabs in header, show mobile nav row instead */
+  .nav-tabs{display:none !important;}
+  .mob-nav{display:block;}
+  .hdr-right{gap:.3rem;}
+  .u-nm{display:none;}
+  .fb-lbl{display:none;}
+  .bsub{display:none;}
+  .ev-cap{max-width:120px;}
 }
-@media(max-width:440px){.kpi-strip{grid-template-columns:repeat(2,1fr);}
+@media(max-width:440px){
+  .kpi-strip{grid-template-columns:repeat(2,1fr);}
   .ev-cap{display:none;}
+  .role-badge{display:none;}
 }
 
 /* Fullscreen photo viewer */
@@ -633,6 +650,10 @@ html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:v
       <div class="nav-tabs" id="navTabs"></div>
     </div>
   </header>
+  <!-- Mobile scrollable nav row -->
+  <div class="mob-nav" id="mobNav">
+    <div class="mob-nav-inner" id="mobNavInner"></div>
+  </div>
   <div class="desk-body">
     <div id="pg-dash"    class="page"></div>
     <div id="pg-guests"  class="page"></div>
@@ -1091,13 +1112,19 @@ const PAGE_TABS=[
 
 function buildNav(){
   const nav=document.getElementById('navTabs');nav.innerHTML='';
+  const mobn=document.getElementById('mobNavInner');if(mobn)mobn.innerHTML='';
   PAGE_TABS.filter(t=>pageAllowed(t.id)).forEach(t=>{
+    // Desktop tab
     const b=document.createElement('button');b.className='ntab';b.id='nt-'+t.id;
     b.textContent=t.lbl;b.onclick=()=>showPage(t.id);nav.appendChild(b);
+    // Mobile tab
+    if(mobn){const mb2=document.createElement('button');mb2.className='mob-ntab';mb2.id='mnt-'+t.id;
+      mb2.textContent=t.lbl;mb2.onclick=()=>showPage(t.id);mobn.appendChild(mb2);}
   });
   // Map button for admin/exec
   if(ROLES[window._cu?.role]?.map){
     const mb=document.createElement('button');mb.className='ntab';mb.textContent='📍 Live Map';mb.onclick=()=>showScreen('s-map');nav.appendChild(mb);
+    if(mobn){const mm=document.createElement('button');mm.className='mob-ntab';mm.textContent='📍 Live Map';mm.onclick=()=>showScreen('s-map');mobn.appendChild(mm);}
   }
 }
 
@@ -1106,8 +1133,13 @@ function showPage(id){
   _curPg=id;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.mob-ntab').forEach(t=>t.classList.remove('on'));
   document.getElementById('pg-'+id)?.classList.add('on');
   document.getElementById('nt-'+id)?.classList.add('on');
+  document.getElementById('mnt-'+id)?.classList.add('on');
+  // Scroll mobile nav to show active tab
+  const mnt=document.getElementById('mnt-'+id);
+  if(mnt)mnt.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
   buildPage(id);
 }
 
@@ -1488,20 +1520,43 @@ function buildAdmin(){
   const wrap=document.getElementById('pg-admin');wrap.innerHTML='';
   const top=document.createElement('div');top.style.cssText='margin-top:1rem;display:flex;flex-direction:column;gap:.85rem;';wrap.appendChild(top);
   // User management
+  const guestOpts=gl().map(g=>`<option value="${g._key}">#${g.sl||''} ${g.name}</option>`).join('');
   const um=document.createElement('div');um.className='sec';
   um.innerHTML=`<div class="sec-head"><div class="sec-title">👥 User Management</div></div>
   <div class="sec-body">
-    <div style="overflow-x:auto;margin-bottom:.8rem"><table class="utbl"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Event</th><th>Assigned Guest</th><th>Action</th></tr></thead><tbody id="userTbody"></tbody></table></div>
-    <div style="border-top:1px solid var(--border);padding-top:.7rem">
-      <div style="font-size:.58rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink4);margin-bottom:.55rem">Add User</div>
-      <div class="frow2" style="gap:.5rem;margin-bottom:.45rem">
-        <div class="fgroup"><label class="flabel">Name</label><input class="finput" id="nNm" placeholder="Full name"></div>
-        <div class="fgroup"><label class="flabel">Email</label><input class="finput" id="nEm" type="email" placeholder="email@example.com"></div>
-        <div class="fgroup"><label class="flabel">Role</label><select class="fsel" id="nRl">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select></div>
-        <div class="fgroup"><label class="flabel">Assigned Guest Key</label><input class="finput" id="nSl" placeholder="e.g. g1"></div>
+    <div style="overflow-x:auto;margin-bottom:.8rem"><table class="utbl"><thead><tr><th>Name</th><th>Role</th><th>Password</th><th>Assigned Guest</th><th>Action</th></tr></thead><tbody id="userTbody"></tbody></table></div>
+    <div style="border-top:1px solid var(--border);padding-top:.8rem">
+      <div style="font-size:.68rem;font-weight:800;color:var(--ink2);margin-bottom:.65rem">➕ Add New User</div>
+      <div style="background:var(--bg);border-radius:10px;padding:.85rem;border:1px solid var(--border)">
+        <div class="frow2" style="gap:.55rem;margin-bottom:.55rem">
+          <div class="fgroup"><label class="flabel">Full Name <span class="form-req">*</span></label><input class="finput" id="nNm" placeholder="e.g. Papori Das Chakraborty" oninput="autoGenEmail()"></div>
+          <div class="fgroup"><label class="flabel">Role <span class="form-req">*</span></label>
+            <select class="fsel" id="nRl" onchange="onRoleChange()">
+              <option value="">— Select Role —</option>
+              ${Object.entries(ROLES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}
+            </select>
+          </div>
+          <div class="fgroup"><label class="flabel">Password <span class="form-req">*</span></label>
+            <div style="display:flex;gap:.3rem">
+              <input class="finput" id="nPwd" placeholder="Min 6 characters" style="flex:1">
+              <button class="btn-sec" onclick="genPassword()" style="flex-shrink:0;white-space:nowrap" title="Auto-generate password">🎲 Generate</button>
+            </div>
+          </div>
+          <div class="fgroup" id="nSlGroup" style="display:none"><label class="flabel">Assigned Guest <span class="form-req">*</span></label>
+            <select class="fsel" id="nSl">
+              <option value="">— Select guest —</option>
+              ${guestOpts}
+            </select>
+          </div>
+          <div class="fgroup" style="grid-column:1/-1">
+            <label class="flabel">Login ID (auto-generated — editable)</label>
+            <input class="finput" id="nEm" placeholder="Will be auto-filled">
+            <span style="font-size:.58rem;color:var(--ink4);margin-top:2px;display:block">This is what the person types to log in. You can change it.</span>
+          </div>
+        </div>
+        <button class="btn-pri" onclick="addUser()" style="width:100%;justify-content:center;padding:.65rem">➕ Create User Account</button>
+        <div id="nUserStatus" style="font-size:.68rem;margin-top:.45rem;text-align:center"></div>
       </div>
-      <button class="btn-pri" onclick="addUser()">➕ Add User</button>
-      <span style="font-size:.6rem;color:var(--ink3);margin-left:.6rem">Firebase Auth user creation requires Admin SDK — this records the profile only.</span>
     </div>
   </div>`;
   top.appendChild(um);
@@ -1528,13 +1583,19 @@ function buildAdmin(){
 
 function renderUserTable(){
   const tbody=document.getElementById('userTbody');if(!tbody)return;tbody.innerHTML='';
-  const users=Object.keys(window._usersDB).length>0?window._usersDB:Object.fromEntries(Object.entries(DEMO).map(([k,v])=>[v.uid,{name:v.name,email:k+'@demo.com',role:v.role,assignedSl:v.assignedSl}]));
+  const users=Object.keys(window._usersDB).length>0?window._usersDB:{};
+  if(!Object.keys(users).length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:1rem;font-size:.7rem;color:var(--ink4)">No users yet. Add your first user below.</td></tr>';
+    return;
+  }
   Object.entries(users).forEach(([uid,u])=>{
+    const gName=u.assignedSl?window._guests[u.assignedSl]?.name||u.assignedSl:'—';
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td style="font-weight:600">${u.name||'—'}</td><td style="font-size:.62rem;color:var(--ink3)">${u.email||'—'}</td>
+    tr.innerHTML=`
+      <td><div style="font-weight:700;font-size:.72rem">${u.name||'—'}</div><div style="font-size:.58rem;color:var(--ink3);font-family:monospace">${u.loginId||u.email||'—'}</div></td>
       <td><select class="rsel" onchange="updateRole('${uid}',this.value)">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}"${k===u.role?' selected':''}>${v.label}</option>`).join('')}</select></td>
-      <td style="font-size:.62rem">${u.assignedEventId||'All'}</td>
-      <td><input type="text" style="width:60px;border:1px solid var(--border);border-radius:5px;padding:2px 5px;font-size:.62rem" value="${u.assignedSl||''}" onchange="updateAssigned('${uid}',this.value)" placeholder="key"></td>
+      <td><div style="font-family:monospace;font-size:.65rem;background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">${u.pwd||'—'}</div></td>
+      <td style="font-size:.68rem">${gName}</td>
       <td>${uid.startsWith('d-')?'<span style="font-size:.58rem;color:var(--ink4)">Demo</span>':`<button class="btn-danger" onclick="deleteUser('${uid}')">🗑</button>`}</td>`;
     tbody.appendChild(tr);
   });
@@ -1543,7 +1604,63 @@ function renderUserTable(){
 function updateRole(uid,role){if(!window._fbReady){showToast('Firebase required');return;}window._update(window._ref(window._db,`users/${uid}`),{role});showToast('✅ Role updated');}
 function updateAssigned(uid,sl){if(!window._fbReady){showToast('Firebase required');return;}window._update(window._ref(window._db,`users/${uid}`),{assignedSl:sl||null});showToast('✅ Updated');}
 function deleteUser(uid){if(!confirm('Delete user?'))return;if(!window._fbReady){showToast('Firebase required');return;}window._remove(window._ref(window._db,`users/${uid}`));showToast('🗑 Removed');}
-function addUser(){const n=document.getElementById('nNm')?.value.trim();const e=document.getElementById('nEm')?.value.trim();const r=document.getElementById('nRl')?.value;const s=document.getElementById('nSl')?.value.trim();if(!n||!e){showToast('Name and email required');return;}if(!window._fbReady){showToast('Firebase required');return;}const uid='user_'+Date.now();window._set(window._ref(window._db,`users/${uid}`),{name:n,email:e,role:r,assignedSl:s||null,assignedEventId:_activeEid||null});showToast(`✅ ${n} added`);}
+/* Auto-generate login ID from name */
+function autoGenEmail(){
+  const n=document.getElementById('nNm')?.value.trim();
+  const r=document.getElementById('nRl')?.value||'user';
+  if(!n)return;
+  const slug=n.split(' ')[0].toLowerCase().replace(/[^a-z]/g,'');
+  document.getElementById('nEm').value=`${slug}.${r}@protodesk.sbi`;
+}
+function onRoleChange(){
+  const r=document.getElementById('nRl')?.value;
+  const grp=document.getElementById('nSlGroup');
+  if(grp)grp.style.display=(r==='protocol'||r==='driver')?'block':'none';
+  autoGenEmail();
+}
+function genPassword(){
+  const chars='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#';
+  let pwd='';for(let i=0;i<8;i++)pwd+=chars[Math.floor(Math.random()*chars.length)];
+  document.getElementById('nPwd').value=pwd;
+}
+async function addUser(){
+  const n=document.getElementById('nNm')?.value.trim();
+  const r=document.getElementById('nRl')?.value;
+  const e=document.getElementById('nEm')?.value.trim();
+  const pwd=document.getElementById('nPwd')?.value.trim();
+  const sl=document.getElementById('nSl')?.value.trim();
+  const stat=document.getElementById('nUserStatus');
+  if(!n){showToast('Enter full name');return;}
+  if(!r){showToast('Select a role');return;}
+  if(!e){showToast('Login ID is required');return;}
+  if(!pwd||pwd.length<6){showToast('Password must be at least 6 characters');return;}
+  if((r==='protocol'||r==='driver')&&!sl){showToast('Please assign a guest for this role');return;}
+  if(!window._fbReady){showToast('Firebase not connected');return;}
+  if(stat)stat.innerHTML='<span style="color:var(--blue)">⏳ Creating account…</span>';
+  try{
+    // Create Firebase Auth user
+    const cred=await window._fbCreateUser(window._auth,e,pwd);
+    const uid=cred.user.uid;
+    // Save profile in database
+    const profile={name:n,role:r,loginId:e,email:e,pwd,assignedSl:sl||null,assignedEventId:_activeEid||null};
+    await window._set(window._ref(window._db,`users/${uid}`),profile);
+    if(stat)stat.innerHTML='<span style="color:var(--green)">✅ '+n+' created successfully!</span>';
+    showToast('✅ '+n+' added');
+    // Clear form
+    ['nNm','nEm','nPwd'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    const rl=document.getElementById('nRl');if(rl)rl.value='';
+    const slEl=document.getElementById('nSl');if(slEl)slEl.value='';
+    const slGrp=document.getElementById('nSlGroup');if(slGrp)slGrp.style.display='none';
+    setTimeout(()=>{if(stat)stat.innerHTML='';},3000);
+    renderUserTable();
+  } catch(err){
+    let msg=err.message||'Error creating user';
+    if(err.code==='auth/email-already-in-use')msg='This login ID already exists. Try a different one.';
+    if(err.code==='auth/invalid-email')msg='Login ID format is invalid.';
+    if(stat)stat.innerHTML='<span style="color:var(--red)">❌ '+msg+'</span>';
+    showToast('❌ '+msg);
+  }
+}
 function exportCSV(){const headers=['SL','Name','Category','Designation','Party','State','Contact','Companion','Arr Flight','Arr Date','Arr Time','Dep Flight','Dep Date','Dep Time','Car','Driver','Driver Mob','Room','Protocol Officer','Proto Mob','Special','Status'];const rows=gl().map(g=>[g.sl,g.name,g.category,g.designation,g.party,g.state,g.contact,g.companion?'Yes':'No',g.arrFlight,g.arrDate,g.arrTime,g.depFlight,g.depDate,g.depTime,g.car,g.driver,g.driverMob,g.room,g.proto,g.protoMob,g.special,gst(g._key)]);const csv=[headers,...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=`${_activeEvent?.name||'protodesk'}_export.csv`.replace(/\s+/g,'_');a.click();showToast('📥 Exported');}
 function resetStatuses(){if(!confirm('Reset all statuses?'))return;gl().forEach(g=>{window._statuses[g._key]={status:'none'};refreshCardStatus(g._key);});if(window._fbReady)window._set(window._ref(window._db,`events/${_activeEid}/statuses`),{});if(_activeEvent)_activeEvent.statuses={};refreshKPIs();showToast('🔄 Reset');}
 function clearNotes(){if(!confirm('Clear all notes?'))return;window._notes={};if(window._fbReady)window._set(window._ref(window._db,`events/${_activeEid}/notes`),{});showToast('🗑 Cleared');}
