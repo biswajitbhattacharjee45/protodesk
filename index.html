@@ -103,7 +103,18 @@ window._subscribeEvent=function(eid){
     window._onTrackersChange&&window._onTrackersChange(window._trackers);
   });
 };
-onValue(ref(db,'events'),s=>{window._events=s.val()||{};window._onDataChange&&window._onDataChange('events');});
+onValue(ref(db,'events'),s=>{
+  window._events=s.val()||{};
+  window._onDataChange&&window._onDataChange('events');
+  // Auto-select event if app is booted but no event selected yet
+  if(window._fbReady&&window._cu&&!_activeEid){
+    const u=window._cu;
+    const eid=u.assignedEventId||Object.keys(window._events)[0];
+    if(eid&&window._events[eid]){
+      if(typeof selectEvent==='function')selectEvent(eid);
+    }
+  }
+});
 onValue(ref(db,'users'), s=>{window._usersDB=s.val()||{};window._onDataChange&&window._onDataChange('users');});
 </script>
 
@@ -1115,8 +1126,23 @@ function bootApp(){
     buildNav();
     showScreen('s-desktop');
     const eid=u.assignedEventId||Object.keys(window._events)[0];
-    if(eid&&window._events[eid])selectEvent(eid);
-    else openEvtModal();
+    if(eid&&window._events[eid]){
+      selectEvent(eid);
+    } else {
+      // Events may not have loaded yet — wait up to 2 seconds then show modal
+      let waited=0;
+      const waitForEvents=setInterval(()=>{
+        waited+=200;
+        const e2=u.assignedEventId||Object.keys(window._events)[0];
+        if(e2&&window._events[e2]){
+          clearInterval(waitForEvents);
+          selectEvent(e2);
+        } else if(waited>=2000){
+          clearInterval(waitForEvents);
+          openEvtModal();
+        }
+      },200);
+    }
   }
 }
 
@@ -2493,96 +2519,99 @@ function exportBulkCredentials(){
    NAME OF PROTOCOL OFFICER | CONTACT NO OF PROTOCOL OFFICER
 ══════════════════════════════════════════════════ */
 
-/* Smart flexible column finder — works even if column names change slightly */
+/* ══════════════════════════════════════════════════
+   SMART COLUMN FINDER — works for any sheet format
+══════════════════════════════════════════════════ */
 function findCol(row, patterns){
   const keys=Object.keys(row);
   for(const pat of patterns){
-    // exact match first
-    if(row[pat]!==undefined&&row[pat]!==null)return row[pat].toString().trim();
-    // case-insensitive partial match
-    const found=keys.find(k=>k.toLowerCase().includes(pat.toLowerCase()));
-    if(found&&row[found]!==undefined)return row[found].toString().trim();
+    if(row[pat]!==undefined&&row[pat]!==null&&row[pat].toString().trim())return row[pat].toString().trim();
+    const found=keys.find(k=>k.toLowerCase().replace(/[^a-z0-9]/g,' ').includes(pat.toLowerCase().replace(/[^a-z0-9]/g,' ')));
+    if(found&&row[found]!==undefined&&row[found]!==null)return row[found].toString().trim();
   }
   return '';
 }
 
-/* Find all columns matching a pattern — for duplicate column names like FLIGHT NO */
-function findAllCols(row, patterns){
+function findColByIndex(row, idx){
   const keys=Object.keys(row);
-  const results=[];
-  for(const k of keys){
-    if(patterns.some(p=>k.toLowerCase().includes(p.toLowerCase()))){
-      const v=row[k];
-      if(v!==undefined&&v!==null&&v.toString().trim())results.push(v.toString().trim());
-    }
-  }
-  return results;
+  return idx<keys.length?row[keys[idx]].toString().trim():'';
 }
 
-/* Skip rows that are not real guests */
-function isSkipRow(name, car){
-  if(!name)return true;
-  const n=name.toLowerCase();
-  const skipWords=['ambulance','control room','doctor','doctors','spare','vehicle only','standby'];
-  if(skipWords.some(w=>n.startsWith(w)||n===w))return true;
-  if(!name&&car)return true; // vehicle with no guest
-  return false;
+function isSkipRow(name){
+  if(!name||!name.trim())return true;
+  const n=name.toLowerCase().trim();
+  const skipWords=['ambulance','control room','doctor','doctors room','spare','vehicle only','standby'];
+  return skipWords.some(w=>n===w||n.startsWith(w));
 }
 
 function mapSheetRowToGuest(row, existingMaxSl){
-  // ── FLEXIBLE NAME DETECTION ───────────────────────────
-  const rawName=findCol(row,['NAME OF THE MP','NAME OF THE OFFICIAL','NAME OF MP','GUEST NAME','NAME','name']);
-  if(isSkipRow(rawName, findCol(row,['CAR NO','CAR','car'])))return null;
+  // Get all column keys for this row
+  const keys=Object.keys(row);
+
+  // ── NAME — most important field ───────────────────────
+  // Try multiple column name variations
+  const rawName=findCol(row,[
+    'NAME OF THE MP/OFFICIAL','NAME OF THE MP','NAME OF MP/OFFICIAL',
+    'NAME OF THE OFFICIAL','GUEST NAME','NAME','name','Name'
+  ]) || (keys.length>=3?row[keys[2]].toString().trim():'');
+
+  if(isSkipRow(rawName))return null;
 
   // ── SERIAL NUMBER ─────────────────────────────────────
-  const slRaw=findCol(row,['SL','Sl No','Serial','S.No','SNO']);
+  const slRaw=findCol(row,['SL','SL.','Sl No','Serial No','S.No','SNO','sr','Sr No'])
+    ||(keys.length>=2?row[keys[1]].toString().trim():'');
   const sl=parseInt(slRaw)||existingMaxSl+1;
 
   // ── TYPE / CATEGORY ───────────────────────────────────
-  const type=findCol(row,['TYPE','Type','Category','category']);
+  const type=findCol(row,['TYPE','Type','CATEGORY','Category'])
+    ||(keys.length>=1?row[keys[0]].toString().trim():'');
   let category='MP / Member of Parliament';
-  if(type.toUpperCase().includes('OFFICIAL')||type.toUpperCase().includes('OFFICER')||
-     type.toUpperCase().includes('DIR')||type.toUpperCase().includes('SECY')||
-     (!type&&sl>16))category='Director / Officer';
-  if(type.toUpperCase().includes('RAJYA')||type.toUpperCase().includes('LOK'))
-    category='MP / Member of Parliament';
+  if(type&&(type.toUpperCase().includes('OFFICIAL')||type.toUpperCase().includes('OFFICER')))
+    category='Director / Officer';
+  if(!type&&sl>=17)category='Director / Officer';
 
   // ── CONTACT ───────────────────────────────────────────
-  const contact=findCol(row,['CONTACT','contact','Mobile','Phone','TEL']).replace(/\D/g,'').slice(-10);
+  const contactRaw=findCol(row,['CONTACT','Contact','MOBILE','Mobile','Phone','TEL']);
+  const contact=contactRaw.replace(/\D/g,'').slice(-10);
+
+  // ── KEY INSIGHT: CSV exports of this sheet have exactly these columns in order:
+  // TYPE | SL | NAME | CONTACT | DATE OF ARRIVAL | FLIGHT NO | TIME OF ARRIVAL |
+  // CAR NO | DRIVER NAME | DRIVER MOBILE | HOTEL ROOM NO |
+  // DATE OF DEPARTURE | FLIGHT NO | TIME OF DEPARTURE |   ← NOTE: FLIGHT NO appears twice but CSV only keeps one
+  // NAME OF PROTOCOL OFFICER | CONTACT NO OF PROTOCOL OFFICER
 
   // ── ARRIVAL ───────────────────────────────────────────
-  const arrDate=findCol(row,['DATE OF ARRIVAL','ARRIVAL DATE','ARR DATE','Arrival Date']);
+  const arrDate=findCol(row,['DATE OF ARRIVAL','ARRIVAL DATE','ARR DATE','Arrival Date','Date of Arrival']);
+  const arrFlight=findCol(row,['FLIGHT NO','FLIGHT NUMBER','FLIGHT NO.','Flight No','ARR FLIGHT','Arr Flight','Train No']);
+  const arrTimeRaw=findCol(row,['TIME OF ARRIVAL','ARRIVAL TIME','ARR TIME','Arr Time','Time of Arrival']);
+  const arrTime=formatTime(arrTimeRaw);
 
-  // For duplicate column headers SheetJS appends _1, _2 etc
-  // Get ALL values matching "FLIGHT NO" and "TIME OF" patterns
-  const allFlights=findAllCols(row,['FLIGHT NO','FLIGHT NUMBER','FLIGHT','TRAIN NO']);
-  const allTimes=findAllCols(row,['TIME OF ARRIVAL','TIME OF DEP','ARRIVAL TIME','DEP TIME','TIME']);
-
-  const arrFlight=allFlights[0]||'';
-  const depFlight=allFlights[1]||allFlights[0]||'';
-  const arrTime=formatTime(allTimes[0]||'');
-  const depTime=formatTime(allTimes[1]||allTimes[0]||'');
-
-  // ── DEPARTURE ─────────────────────────────────────────
-  const depDate=findCol(row,['DATE OF DEPARTURE','DEPARTURE DATE','DEP DATE','Departure Date']);
+  // ── DEPARTURE — when FLIGHT NO is duplicate, CSV drops second one
+  // So we look for specific departure column names
+  const depDate=findCol(row,['DATE OF DEPARTURE','DEPARTURE DATE','DEP DATE','Departure Date','Date of Departure']);
+  const depFlight=findCol(row,['DEP FLIGHT','DEPARTURE FLIGHT','Dep Flight','Flight No (Dep)','FLIGHT NO_1','FLIGHT NO.1']);
+  const depTimeRaw=findCol(row,['TIME OF DEPARTURE','DEPARTURE TIME','DEP TIME','Dep Time','Time of Departure']);
+  const depTime=formatTime(depTimeRaw);
 
   // ── VEHICLE & DRIVER ──────────────────────────────────
-  const car=findCol(row,['CAR NO','CAR NUMBER','CAR','Vehicle No','VEHICLE']);
-  const driver=findCol(row,['DRIVER NAME','DRIVER','Driver']);
-  const driverMob=findCol(row,['DRIVER MOBILE','DRIVER MOB','DRIVER PHONE','Driver Mobile','Driver Contact']).replace(/\D/g,'').slice(-10);
+  const car=findCol(row,['CAR NO','CAR NUMBER','CAR NO.','Car No','Vehicle No','CAR']);
+  const driver=findCol(row,['DRIVER NAME','Driver Name','DRIVER','Driver']);
+  const driverMobRaw=findCol(row,['DRIVER MOBILE','DRIVER MOB','Driver Mobile','Driver Mob','Driver Contact','DRIVER PHONE']);
+  const driverMob=driverMobRaw.replace(/\D/g,'').slice(-10);
 
   // ── HOTEL ─────────────────────────────────────────────
-  const room=findCol(row,['HOTEL ROOM','ROOM NO','ROOM','Hotel Room','Room No']);
+  const room=findCol(row,['HOTEL ROOM NO','HOTEL ROOM','ROOM NO','Room No','ROOM','Hotel Room']);
 
   // ── PROTOCOL OFFICER ──────────────────────────────────
-  const proto=findCol(row,['NAME OF PROTOCOL','PROTOCOL OFFICER','PROTOCOL NAME','Protocol Officer']);
-  const protoMob=findCol(row,['CONTACT NO OF PROTOCOL','PROTOCOL CONTACT','PROTOCOL MOBILE','Protocol Mobile','Protocol Contact']).replace(/\D/g,'').slice(-10);
+  const proto=findCol(row,['NAME OF PROTOCOL OFFICER','PROTOCOL OFFICER','Protocol Officer','PROTOCOL NAME','Proto Officer','PROTO']);
+  const protoMobRaw=findCol(row,['CONTACT NO OF PROTOCOL OFFICER','PROTOCOL CONTACT','Protocol Mobile','Protocol Contact','PROTO MOB','CONTACT NO OF PROTOCOL']);
+  const protoMob=protoMobRaw.replace(/\D/g,'').slice(-10);
 
   // ── NAME CLEANING ─────────────────────────────────────
   const companion=rawName.toLowerCase().includes('with companion');
   let cleanName=rawName.replace(/\s*with companion\s*/gi,'').trim();
 
-  // Extract designation if name has comma pattern: "Smt Nidhi Chaturvedi, Director"
+  // Extract designation from comma pattern: "Smt Nidhi Chaturvedi, Director"
   let designation='',party='',state='';
   if(cleanName.includes(', ')){
     const parts=cleanName.split(', ');
@@ -2659,15 +2688,20 @@ function processImportCSV(csvText){
 
     const toImport=[];
     let skipped=0;
+    let rowsProcessed=0;
     rows.forEach(row=>{
+      rowsProcessed++;
       const g=mapSheetRowToGuest(row,maxSl);
       if(g){
-        // Check if SL already exists — skip duplicates
-        const exists=Object.values(window._guests||{}).some(eg=>eg.sl===g.sl&&eg.name===g.name);
+        // Check if already imported — match by name
+        const exists=Object.values(window._guests||{}).some(eg=>
+          eg.name&&g.name&&eg.name.toLowerCase()===g.name.toLowerCase()
+        );
         if(!exists){toImport.push(g);maxSl=Math.max(maxSl,g.sl);}
         else skipped++;
       }
     });
+    console.log(`Import: ${rowsProcessed} rows processed, ${toImport.length} new guests, ${skipped} duplicates`);
 
     if(!toImport.length){
       setImportStatus(skipped?`ℹ️ All ${skipped} rows already imported — no new guests found`:'ℹ️ No valid guest rows found. Check column names match the expected format.');
