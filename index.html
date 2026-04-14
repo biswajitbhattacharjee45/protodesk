@@ -156,48 +156,67 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
 ══════════════════════════════════════════════════ */
 .screen{position:fixed;inset:0;display:none;flex-direction:column;background:#ffffff;}
 .screen.active{display:flex;}
-#s-login.active{background:#060f1e;}
+#s-login.active{background:#ffffff;}
 
 /* ══════════════════════════════════════════════════
    LOGIN SCREEN — ELEGANT REDESIGN
 ══════════════════════════════════════════════════ */
 #s-login{
-  background:linear-gradient(145deg,#1e0a3c 0%,#2d1158 45%,#1a1060 75%,#0a0520 100%);
+  background:#ffffff;
   align-items:center;justify-content:center;overflow-y:auto;
   padding:calc(var(--safe-top)+1.5rem) 1.25rem calc(var(--safe-bottom)+1.5rem);
   position:fixed;inset:0;
   min-height:100vh;min-height:100dvh;
 }
-#s-login::before{
-  content:'';position:fixed;inset:0;
-  background:
-    radial-gradient(ellipse 70% 50% at 15% 30%,rgba(168,85,247,.3) 0%,transparent 60%),
-    radial-gradient(ellipse 60% 60% at 85% 70%,rgba(99,102,241,.25) 0%,transparent 55%),
-    radial-gradient(ellipse 40% 40% at 50% 100%,rgba(232,121,249,.2) 0%,transparent 50%);
-  pointer-events:none;z-index:0;
-}
+
 .login-box{
-  background:rgba(255,255,255,.18);
-  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
-  border:1px solid rgba(255,255,255,.35);
-  border-radius:28px;padding:2.2rem 2rem 1.5rem;
-  width:min(400px,94vw);
-  box-shadow:0 32px 80px rgba(88,28,135,.5),0 0 0 1px rgba(232,121,249,.15),inset 0 1px 0 rgba(255,255,255,.08);
-  animation:lpop .5s cubic-bezier(.22,.68,0,1.2);
+  background:linear-gradient(145deg,#1a0533 0%,#2a0d52 40%,#1e0a3c 70%,#150828 100%);
+  border-radius:28px;padding:2.5rem 2.2rem 1.8rem;
+  width:min(420px,94vw);
   position:relative;z-index:1;
+  animation:lpop .5s cubic-bezier(.22,.68,0,1.2);
+  box-shadow:
+    0 0 0 1px rgba(167,139,250,.3),
+    0 20px 60px rgba(109,40,217,.4),
+    0 40px 100px rgba(88,28,135,.3),
+    0 0 0 4px rgba(109,40,217,.08);
+  overflow:hidden;
+}
+/* Glowing neon border effect */
+.login-box::before{
+  content:'';position:absolute;inset:0;border-radius:28px;z-index:0;
+  padding:1.5px;
+  background:linear-gradient(135deg,
+    rgba(196,181,253,.9) 0%,
+    rgba(139,92,246,.6) 25%,
+    rgba(109,40,217,.3) 50%,
+    rgba(139,92,246,.6) 75%,
+    rgba(196,181,253,.9) 100%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  pointer-events:none;
+}
+/* Inner glow top */
+.login-box::after{
+  content:'';position:absolute;top:0;left:10%;right:10%;height:1px;z-index:1;
+  background:linear-gradient(90deg,transparent,rgba(196,181,253,.8),transparent);
+  border-radius:50%;
+  box-shadow:0 0 20px 4px rgba(167,139,250,.5);
+  pointer-events:none;
 }
 @keyframes lpop{from{opacity:0;transform:translateY(24px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
 .l-logo-wrap{text-align:center;margin-bottom:1.6rem;}
 .l-gem{
-  width:68px;height:68px;border-radius:18px;
-  background:linear-gradient(135deg,#0b1d3a 0%,#1a3463 50%,#0a4f6b 100%);
+  width:72px;height:72px;border-radius:20px;
+  background:linear-gradient(135deg,#4c1d95 0%,#7c3aed 50%,#6d28d9 100%);
   display:inline-flex;align-items:center;justify-content:center;
-  font-size:1.8rem;
-  box-shadow:0 8px 24px rgba(11,29,58,.4),0 0 0 6px rgba(11,29,58,.08);
+  font-size:1.9rem;
+  box-shadow:0 8px 32px rgba(109,40,217,.5),0 0 0 6px rgba(139,92,246,.15),0 0 60px rgba(167,139,250,.35);
   margin-bottom:1rem;
 }
-.l-title{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:700;color:#f1e8ff;letter-spacing:-.02em;}
-.l-subtitle{font-size:.7rem;color:rgba(216,180,254,.6);letter-spacing:.18em;text-transform:uppercase;margin-top:.3rem;}
+.l-title{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:700;color:#ffffff;letter-spacing:-.02em;text-shadow:0 0 30px rgba(196,181,253,.5);}
+.l-subtitle{font-size:.7rem;color:rgba(196,181,253,.65);letter-spacing:.18em;text-transform:uppercase;margin-top:.3rem;}
 .l-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(168,85,247,.4),transparent);margin:1.4rem 0;}
 .lform{display:flex;flex-direction:column;gap:.9rem;}
 .lfl{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(216,180,254,.8);margin-bottom:.3rem;display:block;}
@@ -205,7 +224,7 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
   width:100%;padding:.85rem 1rem;
   border:1.5px solid rgba(168,85,247,.3);border-radius:12px;
   font-size:1rem;font-family:'Sora',sans-serif;color:#f1e8ff;
-  background:rgba(26,5,51,.6);
+  background:rgba(15,3,40,.55);
   transition:border-color .2s,box-shadow .2s;
 }
 .lfi:focus{outline:none;border-color:rgba(232,121,249,.7);box-shadow:0 0 0 3px rgba(168,85,247,.2),0 0 20px rgba(168,85,247,.15);}
@@ -223,7 +242,7 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
 .lbtn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);border-radius:14px;}
 .lbtn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(168,85,247,.6),0 0 60px rgba(168,85,247,.3);}
 .lbtn:active{transform:translateY(0);}
-.lerr{font-size:.75rem;color:var(--red);background:#fff1f2;border:1px solid #fecaca;border-radius:8px;padding:.45rem .75rem;text-align:center;display:none;}
+.lerr{font-size:.75rem;color:#fca5a5;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:.45rem .75rem;text-align:center;display:none;}
 .lerr.show{display:block;}
 .demo-area{
   margin-top:1rem;
@@ -236,9 +255,9 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
 .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;}
 .dbtn{
   padding:.5rem .5rem;border-radius:8px;
-  border:1px solid #e2e8f0;background:#fff;
+  border:1px solid rgba(139,92,246,.3);background:rgba(255,255,255,.05);
   font-size:.65rem;font-weight:700;cursor:pointer;
-  color:#64748b;font-family:'Sora',sans-serif;
+  color:rgba(196,181,253,.8);font-family:'Sora',sans-serif;
   text-align:center;transition:all .18s;
 }
 .dbtn:hover{border-color:#0b1d3a;background:#0b1d3a;color:#fff;}
