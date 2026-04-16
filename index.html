@@ -1805,10 +1805,10 @@ function makeGCard(g){
       ${isMyG?'<div style="position:absolute;bottom:6px;left:7px;z-index:3;background:#7c3aed;color:#fff;font-size:.48rem;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.06em">⭐ MY GUEST</div>':''}
     </div>
     <div class="gc-body">
-      <div class="gc-name" style="color:${nameColor};font-size:.68rem;font-weight:${isMyG?800:700};line-height:1.3;margin-bottom:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${g.name}${g.companion?'<span class="ctag">+1</span>':''}</div>
-      <div class="gc-cat" style="color:${catColor};font-size:.58rem;margin-bottom:.22rem;">${(g.category||'').split('/')[0].trim()}</div>
+      <div class="gc-name">${g.name}${g.companion?'<span class="ctag">+1</span>':''}</div>
+      <div class="gc-cat">${(g.category||'').split('/')[0].trim()}</div>
       <div class="gc-slbl ${m.cls}">${m.ico} ${m.lbl}</div>
-      <div class="gc-room" style="color:${roomColor};font-size:.56rem;font-family:'DM Mono',monospace;margin-top:2px;">${g.room?'Rm '+g.room:g.designation||''}</div>
+      <div class="gc-room">${g.room?'Rm '+g.room:g.designation||''}</div>
     </div>`;
   const img=card.querySelector('.gc-photo-img');
   const init=card.querySelector('.gc-photo-init');
