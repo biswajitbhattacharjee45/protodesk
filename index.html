@@ -2449,7 +2449,16 @@ function showFieldMessage(text,from){
    TOAST
 ══════════════════════════════════════════════════ */
 let _tt;
-function showToast(msg,duration=2800){const el=document.getElementById('toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),duration);}
+function showToast(msg,duration=2800){
+  clearTimeout(window._toastTimer);
+  let el=document.getElementById('toast');
+  if(!el){el=document.createElement('div');el.id='toast';el.className='toast';document.body.appendChild(el);}
+  el.textContent=msg;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  window._toastTimer=setTimeout(()=>{const t=document.getElementById('toast');if(t)t.classList.remove('show');},duration);
+}
 
 /* ── FULLSCREEN PHOTO VIEWER ── */
 function openPhotoViewer(src, name){
