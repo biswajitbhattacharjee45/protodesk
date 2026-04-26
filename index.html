@@ -109,7 +109,8 @@ onValue(ref(db,'events'),s=>{
   // Auto-select event if app is booted but no event selected yet
   if(window._fbReady&&window._cu&&!_activeEid){
     const u=window._cu;
-    const eid=u.assignedEventId||Object.keys(window._events)[0];
+    const savedEid=localStorage.getItem('pd_lastEvent_'+u.uid);
+    const eid=(savedEid&&window._events[savedEid])?savedEid:(u.assignedEventId||Object.keys(window._events)[0]);
     if(eid&&window._events[eid]){
       if(typeof selectEvent==='function')selectEvent(eid);
     }
@@ -1206,13 +1207,15 @@ function bootApp(){
     // Driver only → mobile field screen
     initFieldScreen();
     showScreen('s-field');
-    const eid=u.assignedEventId||Object.keys(window._events)[0];
+    const savedEid=localStorage.getItem('pd_lastEvent_'+u.uid);
+    const eid=(savedEid&&window._events[savedEid])?savedEid:(u.assignedEventId||Object.keys(window._events)[0]);
     if(eid&&window._events[eid]){selectEvent(eid);}
   } else {
     // Desktop roles → desktop app
     buildNav();
     showScreen('s-desktop');
-    const eid=u.assignedEventId||Object.keys(window._events)[0];
+    const savedEid=localStorage.getItem('pd_lastEvent_'+u.uid);
+    const eid=(savedEid&&window._events[savedEid])?savedEid:(u.assignedEventId||Object.keys(window._events)[0]);
     if(eid&&window._events[eid]){
       selectEvent(eid);
     } else {
@@ -1220,7 +1223,8 @@ function bootApp(){
       let waited=0;
       const waitForEvents=setInterval(()=>{
         waited+=200;
-        const e2=u.assignedEventId||Object.keys(window._events)[0];
+        const sv=localStorage.getItem('pd_lastEvent_'+u.uid);
+        const e2=(sv&&window._events[sv])?sv:(u.assignedEventId||Object.keys(window._events)[0]);
         if(e2&&window._events[e2]){
           clearInterval(waitForEvents);
           selectEvent(e2);
@@ -1247,6 +1251,8 @@ function makeDemoEvent(){
 function selectEvent(eid){
   _activeEid=eid;_activeEvent=window._events[eid];
   if(!_activeEvent)return;
+  // Persist last-selected event per user so it survives logout/login
+  try{const uid=window._cu?.uid;if(uid)localStorage.setItem('pd_lastEvent_'+uid,eid);}catch(e){}
   window._guests  =_activeEvent.guests||{};
   window._statuses=_activeEvent.statuses||{};
   window._notes   =_activeEvent.notes||{};
@@ -2448,7 +2454,6 @@ function showFieldMessage(text,from){
 /* ══════════════════════════════════════════════════
    TOAST
 ══════════════════════════════════════════════════ */
-let _tt;
 function showToast(msg,duration=2800){
   clearTimeout(window._toastTimer);
   let el=document.getElementById('toast');
