@@ -722,8 +722,8 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
 .msg-close{margin-left:auto;background:rgba(255,255,255,.1);border:none;border-radius:50%;width:24px;height:24px;color:#fff;font-size:.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
 /* TOAST */
-.toast{position:fixed;bottom:calc(var(--safe-bottom)+.85rem);left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy);color:#fff;border-radius:10px;padding:.48rem 1.2rem;font-size:.72rem;font-weight:700;box-shadow:var(--sh4);z-index:8000;transition:transform .28s ease;pointer-events:none;white-space:nowrap;}
-.toast.show{transform:translateX(-50%) translateY(0);}
+.toast{position:fixed;bottom:calc(var(--safe-bottom)+.85rem);left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;border-radius:10px;padding:.48rem 1.2rem;font-size:.72rem;font-weight:700;box-shadow:var(--sh4);z-index:8000;transition:opacity .3s ease,visibility .3s ease;pointer-events:none;white-space:nowrap;opacity:0;visibility:hidden;}
+.toast.show{opacity:1;visibility:visible;}
 
 /* EMPTY */
 .empty{text-align:center;padding:2.5rem 1.5rem;color:var(--ink4);}
@@ -1251,7 +1251,6 @@ function makeDemoEvent(){
 function selectEvent(eid){
   _activeEid=eid;_activeEvent=window._events[eid];
   if(!_activeEvent)return;
-  // Persist last-selected event per user so it survives logout/login
   try{const uid=window._cu?.uid;if(uid)localStorage.setItem('pd_lastEvent_'+uid,eid);}catch(e){}
   window._guests  =_activeEvent.guests||{};
   window._statuses=_activeEvent.statuses||{};
