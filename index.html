@@ -228,6 +228,10 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
 }
 .lfi:focus{outline:none;border-color:rgba(232,121,249,.7);box-shadow:0 0 0 3px rgba(168,85,247,.2),0 0 20px rgba(168,85,247,.15);}
 .lfi::placeholder{color:rgba(167,139,250,.4);}
+.lfi-wrap{position:relative;display:block;}
+.lfi-wrap .lfi{padding-right:2.8rem;}
+.lfi-eye{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(167,139,250,.6);font-size:1.1rem;line-height:1;padding:0;display:flex;align-items:center;transition:color .2s;}
+.lfi-eye:hover{color:rgba(232,121,249,.9);}
 .lbtn{
   width:100%;padding:.95rem;border:none;border-radius:14px;
   background:linear-gradient(135deg,#7c3aed,#a855f7,#c084fc);
@@ -784,7 +788,10 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
       </div>
       <div>
         <label class="lfl">Password</label>
-        <input class="lfi" type="password" id="lPass" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()">
+        <div class="lfi-wrap">
+          <input class="lfi" type="password" id="lPass" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()">
+          <button class="lfi-eye" type="button" onclick="const p=document.getElementById('lPass');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'👁':'🙈';" title="Show/hide password">👁</button>
+        </div>
       </div>
       <div class="lerr" id="lErr"></div>
       <button class="lbtn" id="lBtn" onclick="if(typeof doLoginBtn==='function')doLoginBtn()">Sign In →</button>
@@ -2037,9 +2044,8 @@ function renderUserTable(){
   Object.entries(users).forEach(([uid,u])=>{
     const gName=u.assignedSl?(window._guests[u.assignedSl]?.name||u.assignedSl):'Not assigned';
     const mob10=(u.mobile||'').replace(/\D/g,'').slice(-10);
-    const pwdLine=u.pwd?`Password: ${u.pwd}`:`Password: (as set by you on first login)`;
     const waMsg=mob10?encodeURIComponent(
-      `🏛 *ProtoDesk — Event Coordination App*\n\nDear ${(u.name||'').split(' ')[0]},\n\nYour ProtoDesk login:\n\n🔗 https://biswajitbhattacharjee45.github.io/protodesk\n\n📱 Mobile: ${mob10}\n${pwdLine}\n\n⚠️ Change password on first login.\n\n— SBI LHO Guwahati · Protocol Cell`
+      `🏛 *ProtoDesk — Event Coordination App*\n\nDear ${(u.name||'').split(' ')[0]},\n\nYour ProtoDesk login:\n\n🔗 https://biswajitbhattacharjee45.github.io/protodesk\n\n📱 Mobile: ${mob10}\n${u.pwd?'Password: '+u.pwd:'Password: (as set by you on first login)'}\n\n⚠️ Change password on first login.\n\n— SBI LHO Guwahati · Protocol Cell`
     ):'';
     const waUrl=mob10?`https://wa.me/91${mob10}?text=${waMsg}`:'';
     const isDemo=uid.startsWith('d-');
@@ -2524,21 +2530,78 @@ function resolveGuest(guestRaw){
 
 function parseRows(data){
   _bulkRows=[];
-  let idx=0;
-  data.forEach(row=>{
-    const keys=Object.keys(row);
-    const name=(row['Name']||row['name']||row['NAME']||row[keys[0]]||'').toString().trim();
-    if(!name||name.toLowerCase()==='name'||!name)return;
-    const roleRaw=(row['Role']||row['role']||row['ROLE']||row[keys[1]]||'protocol').toString();
-    const role=normaliseRole(roleRaw);
-    const mobile=(row['Mobile']||row['mobile']||row['MOBILE']||row['Phone']||row['phone']||row[keys[2]]||'').toString().trim().replace(/\D/g,'').slice(-10);
-    const guestRaw=(row['Guest']||row['guest']||row['Assigned Guest']||row['assigned_guest']||row[keys[3]]||'').toString().trim();
-    const guest=resolveGuest(guestRaw);
-    const loginId=makeLoginId(mobile,role,idx); // mobile number becomes login ID
-    const pwd=makePwd();
-    _bulkRows.push({name,role,mobile,loginId,pwd,guestKey:guest.key,guestName:guest.name,guestRaw,status:'pending',idx});
-    idx++;
-  });
+  if(!data.length)return renderBulkPreview();
+
+  // Detect if this is the main coordination sheet
+  // Signs: 14+ columns OR has a column named with PROTOCOL OFFICER
+  const sampleKeys=Object.keys(data[0]);
+  const hasProtoCol=sampleKeys.some(k=>k.toUpperCase().includes('PROTOCOL'));
+  const isCoordSheet=hasProtoCol||sampleKeys.length>=14;
+
+  if(isCoordSheet){
+    // ── COORDINATION SHEET MODE ──────────────────────────
+    // Protocol Officer name = col O, mobile = col P, guest = col C (NAME)
+    let idx=0;
+    const seen=new Set();
+    data.forEach(row=>{
+      // Guest name = NAME column (col C / index 2)
+      const guestNameRaw=findCol(row,[
+        'NAME OF THE MP/OFFICIAL','NAME OF THE MP','NAME OF MP/OFFICIAL',
+        'NAME OF THE OFFICIAL','GUEST NAME','NAME','name','Name'
+      ])||(Object.values(row)[2]||'').toString().trim();
+      if(!guestNameRaw||isSkipRow(guestNameRaw))return;
+
+      // Protocol Officer name = col O
+      const protoName=findCol(row,[
+        'NAME OF PROTOCOL OFFICER','PROTOCOL OFFICER','Protocol Officer',
+        'PROTOCOL NAME','Proto Officer','PROTO'
+      ]);
+      // Protocol Mobile = col P
+      const protoMobRaw=findCol(row,[
+        'CONTACT NO OF PROTOCOL OFFICER','PROTOCOL CONTACT','Protocol Mobile',
+        'Protocol Contact','PROTO MOB','CONTACT NO OF PROTOCOL'
+      ]);
+      const protoMob=protoMobRaw.replace(/\D/g,'').slice(-10);
+
+      if(!protoName||protoMob.length<10)return; // skip rows without valid protocol officer mobile
+      if(seen.has(protoMob))return; // deduplicate by mobile
+      seen.add(protoMob);
+
+      const guest=resolveGuest(guestNameRaw);
+      const loginId=makeLoginId(protoMob,'protocol',idx);
+      const pwd=makePwd();
+      _bulkRows.push({
+        name:protoName,role:'protocol',mobile:protoMob,
+        loginId,pwd,guestKey:guest.key,
+        guestName:guest.key?guest.name:guestNameRaw,
+        guestRaw:guestNameRaw,status:'pending',idx
+      });
+      idx++;
+    });
+  } else {
+    // ── STANDARD BULK SHEET MODE ─────────────────────────
+    // Columns: Name | Role | Mobile | Guest(optional)
+    let idx=0;
+    data.forEach(row=>{
+      const keys=Object.keys(row);
+      const name=(row['Name']||row['name']||row['NAME']||row[keys[0]]||'').toString().trim();
+      if(!name||name.toLowerCase()==='name')return;
+      const roleRaw=(row['Role']||row['role']||row['ROLE']||row[keys[1]]||'protocol').toString();
+      const role=normaliseRole(roleRaw);
+      const mobile=(row['Mobile']||row['mobile']||row['MOBILE']||row['Phone']||row['phone']||row[keys[2]]||'').toString().trim().replace(/\D/g,'').slice(-10);
+      const guestRaw=(row['Guest']||row['guest']||row['Assigned Guest']||row['assigned_guest']||row[keys[3]]||'').toString().trim();
+      let guest=resolveGuest(guestRaw);
+      if(!guest.key){
+        const colC=(row[keys[2]]||'').toString().trim();
+        const colCGuest=resolveGuest(colC);
+        if(colCGuest.key)guest=colCGuest;
+      }
+      const loginId=makeLoginId(mobile,role,idx);
+      const pwd=makePwd();
+      _bulkRows.push({name,role,mobile,loginId,pwd,guestKey:guest.key,guestName:guest.name,guestRaw:guest.key?guest.name:guestRaw,status:'pending',idx});
+      idx++;
+    });
+  }
   renderBulkPreview();
 }
 
