@@ -1566,7 +1566,12 @@ function buildDash(){
   // Flight timeline
   const grps={};
   glist.forEach(g=>{if(!g.arrFlight)return;const k=`${g.arrDate||''}||${g.arrFlight}||${g.arrTime||''}`;if(!grps[k])grps[k]={d:g.arrDate||'',f:g.arrFlight,t:g.arrTime||'',n:0,tp:'arr'};grps[k].n++;});
-  const fls=Object.values(grps).sort((a,b)=>a.t.localeCompare(b.t));
+  const fls=Object.values(grps).sort((a,b)=>{
+    // Parse date dd/mm/yyyy → sortable yyyymmdd
+    const parseDate=d=>{const p=d.split('/');return p.length===3?p[2]+p[1]+p[0]:'99999999';};
+    const dc=parseDate(a.d).localeCompare(parseDate(b.d));
+    return dc!==0?dc:a.t.localeCompare(b.t);
+  });
   const ft=document.createElement('div');ft.className='sec';
   ft.innerHTML=`<div class="sec-head"><div class="sec-title">Travel Schedule</div></div>
   <div class="sec-body"><div style="display:flex;flex-direction:column;gap:.32rem">${fls.length?fls.map(f=>`<div style="display:flex;align-items:center;gap:.52rem;padding:.5rem .7rem;border-radius:8px;background:var(--bg);border:1px solid var(--border)"><span style="font-family:'DM Mono',monospace;font-size:.74rem;font-weight:600;color:var(--ink);width:38px;flex-shrink:0">${f.t}</span><div style="flex:1"><div style="font-size:.68rem;font-weight:700">${f.f}</div><div style="font-size:.55rem;color:var(--ink4)">${f.d}</div></div><span style="font-size:.56rem;font-weight:800;padding:2px 7px;border-radius:20px;background:var(--gbg);color:var(--green);border:1px solid var(--gbd)">${f.n} arriving</span></div>`).join(''):'<div class="empty"><div class="ei">✈</div><p style="font-size:.7rem">No travel details entered</p></div>'}</div></div>`;
@@ -1575,7 +1580,7 @@ function buildDash(){
   const vt=document.createElement('div');vt.className='sec';
   vt.innerHTML=`<div class="sec-head"><div class="sec-title">Vehicles</div></div>
   <div class="sec-body" style="padding:.4rem"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:var(--navy)"><th style="font-size:.5rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding:7px 8px;text-align:left">Car</th><th style="font-size:.5rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding:7px 8px">Driver</th><th style="font-size:.5rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding:7px 8px">Mobile</th><th style="font-size:.5rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding:7px 8px">Guest</th></tr></thead><tbody>
-  ${glist.filter(g=>g.car).map(g=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;font-family:'DM Mono',monospace;font-size:.64rem;font-weight:600;color:var(--navy)">${g.car}</td><td style="padding:5px 8px;font-size:.68rem">${g.driver||'—'}</td><td style="padding:5px 8px;font-size:.62rem;font-family:'DM Mono',monospace">${g.driverMob||'—'}</td><td style="padding:5px 8px;font-size:.65rem">${g.name.split(' ').slice(-1)[0]}</td></tr>`).join('')}
+  ${glist.filter(g=>g.car).map(g=>{const parts=g.name.trim().split(/\s+/);const shortName=parts.slice(0,2).join(' ');return`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;font-family:'DM Mono',monospace;font-size:.64rem;font-weight:600;color:var(--navy)">${g.car}</td><td style="padding:5px 8px;font-size:.68rem">${g.driver||'—'}</td><td style="padding:5px 8px;font-size:.62rem;font-family:'DM Mono',monospace">${g.driverMob||'—'}</td><td style="padding:5px 8px;font-size:.65rem">${shortName}</td></tr>`;}).join('')}
   </tbody></table></div>`;
   lc.appendChild(vt);
   // Right col
@@ -2045,7 +2050,7 @@ function renderUserTable(){
     const gName=u.assignedSl?(window._guests[u.assignedSl]?.name||u.assignedSl):'Not assigned';
     const mob10=(u.mobile||'').replace(/\D/g,'').slice(-10);
     const waMsg=mob10?encodeURIComponent(
-      `🏛 *ProtoDesk — Event Coordination App*\n\nDear ${(u.name||'').split(' ')[0]},\n\nYour ProtoDesk login:\n\n🔗 https://biswajitbhattacharjee45.github.io/protodesk\n\n📱 Mobile: ${mob10}\n${u.pwd?'Password: '+u.pwd:'Password: (as set by you on first login)'}\n\n⚠️ Change password on first login.\n\n— SBI LHO Guwahati · Protocol Cell`
+      `🏛 *ProtoDesk — Event Coordination App*\n\nDear ${(u.name||'').split(' ')[0]},\n\nYour ProtoDesk login:\n\n🔗 https://biswajitbhattacharjee45.github.io/protodesk\n\n📱 Mobile: ${mob10}\n${u.pwd?'Password: '+u.pwd:'Password: (as set by you)'}\n\n⚠️ Change password on first login.\n\n— SBI LHO Guwahati · Protocol Cell`
     ):'';
     const waUrl=mob10?`https://wa.me/91${mob10}?text=${waMsg}`:'';
     const isDemo=uid.startsWith('d-');
@@ -2533,7 +2538,7 @@ function parseRows(data){
   if(!data.length)return renderBulkPreview();
 
   // Detect if this is the main coordination sheet
-  // Signs: 14+ columns OR has a column named with PROTOCOL OFFICER
+  // Signs: 14+ columns OR has a column named with PROTOCOL
   const sampleKeys=Object.keys(data[0]);
   const hasProtoCol=sampleKeys.some(k=>k.toUpperCase().includes('PROTOCOL'));
   const isCoordSheet=hasProtoCol||sampleKeys.length>=14;
@@ -2544,29 +2549,23 @@ function parseRows(data){
     let idx=0;
     const seen=new Set();
     data.forEach(row=>{
-      // Guest name = NAME column (col C / index 2)
       const guestNameRaw=findCol(row,[
         'NAME OF THE MP/OFFICIAL','NAME OF THE MP','NAME OF MP/OFFICIAL',
         'NAME OF THE OFFICIAL','GUEST NAME','NAME','name','Name'
       ])||(Object.values(row)[2]||'').toString().trim();
       if(!guestNameRaw||isSkipRow(guestNameRaw))return;
-
-      // Protocol Officer name = col O
       const protoName=findCol(row,[
         'NAME OF PROTOCOL OFFICER','PROTOCOL OFFICER','Protocol Officer',
         'PROTOCOL NAME','Proto Officer','PROTO'
       ]);
-      // Protocol Mobile = col P
       const protoMobRaw=findCol(row,[
         'CONTACT NO OF PROTOCOL OFFICER','PROTOCOL CONTACT','Protocol Mobile',
         'Protocol Contact','PROTO MOB','CONTACT NO OF PROTOCOL'
       ]);
       const protoMob=protoMobRaw.replace(/\D/g,'').slice(-10);
-
-      if(!protoName||protoMob.length<10)return; // skip rows without valid protocol officer mobile
-      if(seen.has(protoMob))return; // deduplicate by mobile
+      if(!protoName||protoMob.length<10)return;
+      if(seen.has(protoMob))return;
       seen.add(protoMob);
-
       const guest=resolveGuest(guestNameRaw);
       const loginId=makeLoginId(protoMob,'protocol',idx);
       const pwd=makePwd();
@@ -2580,7 +2579,6 @@ function parseRows(data){
     });
   } else {
     // ── STANDARD BULK SHEET MODE ─────────────────────────
-    // Columns: Name | Role | Mobile | Guest(optional)
     let idx=0;
     data.forEach(row=>{
       const keys=Object.keys(row);
@@ -2592,8 +2590,7 @@ function parseRows(data){
       const guestRaw=(row['Guest']||row['guest']||row['Assigned Guest']||row['assigned_guest']||row[keys[3]]||'').toString().trim();
       let guest=resolveGuest(guestRaw);
       if(!guest.key){
-        const colC=(row[keys[2]]||'').toString().trim();
-        const colCGuest=resolveGuest(colC);
+        const colCGuest=resolveGuest((row[keys[2]]||'').toString().trim());
         if(colCGuest.key)guest=colCGuest;
       }
       const loginId=makeLoginId(mobile,role,idx);
@@ -2713,7 +2710,8 @@ async function bulkCreateUsers(){
         name:r.name,role:r.role,loginId:r.loginId,email:r.loginId,
         pwd:r.pwd,mobile:r.mobile||'',
         assignedSl:r.guestKey||null,
-        assignedEventId:r.guestKey?(_activeEid||null):null
+        assignedEventId:r.guestKey?(_activeEid||null):null,
+        mustChangePwd:true
       });
       r.status='done';r.uid=uid;done++;
       if(statCell)statCell.innerHTML='<span style="color:var(--green);font-weight:700;font-size:.65rem">✅ Created</span>';
