@@ -478,6 +478,7 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
 .sab.brt{border-color:#fde68a;background:#fffbeb;}.sab.brt .sab-lbl{color:#92400e;}
 .sab.bns{border-color:#fecaca;background:#fff1f2;}.sab.bns .sab-lbl{color:var(--red);}
 .sab.brst{border-color:#cbd5e1;background:#f8fafc;}.sab.brst .sab-lbl{color:#64748b;}
+.sab.brst{border-color:#cbd5e1;background:#f8fafc;}.sab.brst .sab-lbl{color:#64748b;}
 .cacts{display:grid;grid-template-columns:1fr 1fr;gap:.3rem;margin-bottom:.45rem;}
 .cab{display:flex;align-items:center;gap:.38rem;padding:.5rem .6rem;border-radius:8px;border:1.5px solid;cursor:pointer;transition:all .18s;text-decoration:none;font-family:'Sora',sans-serif;background:#ffffff;}
 .cab:hover{transform:translateY(-1px);}
@@ -1038,6 +1039,7 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
       <button class="sab brt"  id="sRt"  onclick="markSt(_drKey,'pending')"><span class="sab-ico">⏳</span><span class="sab-lbl">En Route</span></button>
       <button class="sab bns"  id="sNs"  onclick="markSt(_drKey,'no-show')"><span class="sab-ico">❌</span><span class="sab-lbl">No Show</span></button>
       <button class="sab brst" id="sRst" onclick="markSt(_drKey,'none')"><span class="sab-ico">⬜</span><span class="sab-lbl">Reset</span></button>
+      <button class="sab brst" id="sRst" onclick="markSt(_drKey,'none')"><span class="sab-ico">⬜</span><span class="sab-lbl">Reset</span></button>
     </div>
     <div class="dr-sec-title" style="margin-top:.45rem">Quick Contact</div>
     <div class="cacts">
@@ -1566,12 +1568,8 @@ function buildDash(){
   // Flight timeline
   const grps={};
   glist.forEach(g=>{if(!g.arrFlight)return;const k=`${g.arrDate||''}||${g.arrFlight}||${g.arrTime||''}`;if(!grps[k])grps[k]={d:g.arrDate||'',f:g.arrFlight,t:g.arrTime||'',n:0,tp:'arr'};grps[k].n++;});
-  const fls=Object.values(grps).sort((a,b)=>{
-    // Parse date dd/mm/yyyy → sortable yyyymmdd
-    const parseDate=d=>{const p=d.split('/');return p.length===3?p[2]+p[1]+p[0]:'99999999';};
-    const dc=parseDate(a.d).localeCompare(parseDate(b.d));
-    return dc!==0?dc:a.t.localeCompare(b.t);
-  });
+  const parseD=d=>{const p=(d||'').split('/');return p.length===3?p[2]+p[1].padStart(2,'0')+p[0].padStart(2,'0'):'99999999';};
+  const fls=Object.values(grps).sort((a,b)=>{const dc=parseD(a.d).localeCompare(parseD(b.d));return dc!==0?dc:a.t.localeCompare(b.t);});
   const ft=document.createElement('div');ft.className='sec';
   ft.innerHTML=`<div class="sec-head"><div class="sec-title">Travel Schedule</div></div>
   <div class="sec-body"><div style="display:flex;flex-direction:column;gap:.32rem">${fls.length?fls.map(f=>`<div style="display:flex;align-items:center;gap:.52rem;padding:.5rem .7rem;border-radius:8px;background:var(--bg);border:1px solid var(--border)"><span style="font-family:'DM Mono',monospace;font-size:.74rem;font-weight:600;color:var(--ink);width:38px;flex-shrink:0">${f.t}</span><div style="flex:1"><div style="font-size:.68rem;font-weight:700">${f.f}</div><div style="font-size:.55rem;color:var(--ink4)">${f.d}</div></div><span style="font-size:.56rem;font-weight:800;padding:2px 7px;border-radius:20px;background:var(--gbg);color:var(--green);border:1px solid var(--gbd)">${f.n} arriving</span></div>`).join(''):'<div class="empty"><div class="ei">✈</div><p style="font-size:.7rem">No travel details entered</p></div>'}</div></div>`;
@@ -1580,7 +1578,7 @@ function buildDash(){
   const vt=document.createElement('div');vt.className='sec';
   vt.innerHTML=`<div class="sec-head"><div class="sec-title">Vehicles</div></div>
   <div class="sec-body" style="padding:.4rem"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:var(--navy)"><th style="font-size:.5rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding:7px 8px;text-align:left">Car</th><th style="font-size:.5rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding:7px 8px">Driver</th><th style="font-size:.5rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding:7px 8px">Mobile</th><th style="font-size:.5rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding:7px 8px">Guest</th></tr></thead><tbody>
-  ${glist.filter(g=>g.car).map(g=>{const parts=g.name.trim().split(/\s+/);const shortName=parts.slice(0,2).join(' ');return`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;font-family:'DM Mono',monospace;font-size:.64rem;font-weight:600;color:var(--navy)">${g.car}</td><td style="padding:5px 8px;font-size:.68rem">${g.driver||'—'}</td><td style="padding:5px 8px;font-size:.62rem;font-family:'DM Mono',monospace">${g.driverMob||'—'}</td><td style="padding:5px 8px;font-size:.65rem">${shortName}</td></tr>`;}).join('')}
+  ${glist.filter(g=>g.car).map(g=>{const nm=g.name.trim().split(/\s+/).slice(0,2).join(' ');return`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;font-family:'DM Mono',monospace;font-size:.64rem;font-weight:600;color:var(--navy)">${g.car}</td><td style="padding:5px 8px;font-size:.68rem">${g.driver||'—'}</td><td style="padding:5px 8px;font-size:.62rem;font-family:'DM Mono',monospace">${g.driverMob||'—'}</td><td style="padding:5px 8px;font-size:.65rem">${nm}</td></tr>`;}).join('')}
   </tbody></table></div>`;
   lc.appendChild(vt);
   // Right col
@@ -2536,32 +2534,16 @@ function resolveGuest(guestRaw){
 function parseRows(data){
   _bulkRows=[];
   if(!data.length)return renderBulkPreview();
-
-  // Detect if this is the main coordination sheet
-  // Signs: 14+ columns OR has a column named with PROTOCOL
   const sampleKeys=Object.keys(data[0]);
   const hasProtoCol=sampleKeys.some(k=>k.toUpperCase().includes('PROTOCOL'));
   const isCoordSheet=hasProtoCol||sampleKeys.length>=14;
-
   if(isCoordSheet){
-    // ── COORDINATION SHEET MODE ──────────────────────────
-    // Protocol Officer name = col O, mobile = col P, guest = col C (NAME)
-    let idx=0;
-    const seen=new Set();
+    let idx=0;const seen=new Set();
     data.forEach(row=>{
-      const guestNameRaw=findCol(row,[
-        'NAME OF THE MP/OFFICIAL','NAME OF THE MP','NAME OF MP/OFFICIAL',
-        'NAME OF THE OFFICIAL','GUEST NAME','NAME','name','Name'
-      ])||(Object.values(row)[2]||'').toString().trim();
+      const guestNameRaw=findCol(row,['NAME OF THE MP/OFFICIAL','NAME OF THE MP','NAME OF MP/OFFICIAL','NAME OF THE OFFICIAL','GUEST NAME','NAME','name','Name'])||(Object.values(row)[2]||'').toString().trim();
       if(!guestNameRaw||isSkipRow(guestNameRaw))return;
-      const protoName=findCol(row,[
-        'NAME OF PROTOCOL OFFICER','PROTOCOL OFFICER','Protocol Officer',
-        'PROTOCOL NAME','Proto Officer','PROTO'
-      ]);
-      const protoMobRaw=findCol(row,[
-        'CONTACT NO OF PROTOCOL OFFICER','PROTOCOL CONTACT','Protocol Mobile',
-        'Protocol Contact','PROTO MOB','CONTACT NO OF PROTOCOL'
-      ]);
+      const protoName=findCol(row,['NAME OF PROTOCOL OFFICER','PROTOCOL OFFICER','Protocol Officer','PROTOCOL NAME','Proto Officer','PROTO']);
+      const protoMobRaw=findCol(row,['CONTACT NO OF PROTOCOL OFFICER','PROTOCOL CONTACT','Protocol Mobile','Protocol Contact','PROTO MOB','CONTACT NO OF PROTOCOL']);
       const protoMob=protoMobRaw.replace(/\D/g,'').slice(-10);
       if(!protoName||protoMob.length<10)return;
       if(seen.has(protoMob))return;
@@ -2569,16 +2551,10 @@ function parseRows(data){
       const guest=resolveGuest(guestNameRaw);
       const loginId=makeLoginId(protoMob,'protocol',idx);
       const pwd=makePwd();
-      _bulkRows.push({
-        name:protoName,role:'protocol',mobile:protoMob,
-        loginId,pwd,guestKey:guest.key,
-        guestName:guest.key?guest.name:guestNameRaw,
-        guestRaw:guestNameRaw,status:'pending',idx
-      });
+      _bulkRows.push({name:protoName,role:'protocol',mobile:protoMob,loginId,pwd,guestKey:guest.key,guestName:guest.key?guest.name:guestNameRaw,guestRaw:guestNameRaw,status:'pending',idx});
       idx++;
     });
   } else {
-    // ── STANDARD BULK SHEET MODE ─────────────────────────
     let idx=0;
     data.forEach(row=>{
       const keys=Object.keys(row);
@@ -2589,10 +2565,7 @@ function parseRows(data){
       const mobile=(row['Mobile']||row['mobile']||row['MOBILE']||row['Phone']||row['phone']||row[keys[2]]||'').toString().trim().replace(/\D/g,'').slice(-10);
       const guestRaw=(row['Guest']||row['guest']||row['Assigned Guest']||row['assigned_guest']||row[keys[3]]||'').toString().trim();
       let guest=resolveGuest(guestRaw);
-      if(!guest.key){
-        const colCGuest=resolveGuest((row[keys[2]]||'').toString().trim());
-        if(colCGuest.key)guest=colCGuest;
-      }
+      if(!guest.key){const cg=resolveGuest((row[keys[2]]||'').toString().trim());if(cg.key)guest=cg;}
       const loginId=makeLoginId(mobile,role,idx);
       const pwd=makePwd();
       _bulkRows.push({name,role,mobile,loginId,pwd,guestKey:guest.key,guestName:guest.name,guestRaw:guest.key?guest.name:guestRaw,status:'pending',idx});
@@ -2704,8 +2677,19 @@ async function bulkCreateUsers(){
     const statCell=document.getElementById('bstat-'+i);
     if(statCell)statCell.innerHTML='<span style="color:var(--amber);font-size:.65rem">⏳ Creating…</span>';
     try{
-      const cred=await window._fbCreateUser(window._auth,r.loginId,r.pwd);
-      const uid=cred.user.uid;
+      let uid;
+      try{
+        const cred=await window._fbCreateUser(window._auth,r.loginId,r.pwd);
+        uid=cred.user.uid;
+      }catch(createErr){
+        if(createErr.code==='auth/email-already-in-use'){
+          // Account exists in Auth but was deleted from DB — sign in to get uid
+          const cred2=await window._fbSignIn(window._auth,r.loginId,r.pwd);
+          uid=cred2.user.uid;
+        } else {
+          throw createErr;
+        }
+      }
       await window._set(window._ref(window._db,`users/${uid}`),{
         name:r.name,role:r.role,loginId:r.loginId,email:r.loginId,
         pwd:r.pwd,mobile:r.mobile||'',
