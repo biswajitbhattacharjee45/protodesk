@@ -111,9 +111,7 @@ onValue(ref(db,'events'),s=>{
     const u=window._cu;
     const savedEid=localStorage.getItem('pd_lastEvent_'+u.uid);
     const eid=(savedEid&&window._events[savedEid])?savedEid:(u.assignedEventId||Object.keys(window._events)[0]);
-    if(eid&&window._events[eid]){
-      if(typeof selectEvent==='function')selectEvent(eid);
-    }
+    if(eid&&window._events[eid]){if(typeof selectEvent==='function')selectEvent(eid);}
   }
 });
 onValue(ref(db,'users'), s=>{window._usersDB=s.val()||{};window._onDataChange&&window._onDataChange('users');});
@@ -475,6 +473,7 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
 .sab.bdep{border-color:var(--bbd);background:var(--bbg);}.sab.bdep .sab-lbl{color:var(--blue);}
 .sab.brt{border-color:#fde68a;background:#fffbeb;}.sab.brt .sab-lbl{color:#92400e;}
 .sab.bns{border-color:#fecaca;background:#fff1f2;}.sab.bns .sab-lbl{color:var(--red);}
+.sab.brst{border-color:#cbd5e1;background:#f8fafc;}.sab.brst .sab-lbl{color:#64748b;}
 .cacts{display:grid;grid-template-columns:1fr 1fr;gap:.3rem;margin-bottom:.45rem;}
 .cab{display:flex;align-items:center;gap:.38rem;padding:.5rem .6rem;border-radius:8px;border:1.5px solid;cursor:pointer;transition:all .18s;text-decoration:none;font-family:'Sora',sans-serif;background:#ffffff;}
 .cab:hover{transform:translateY(-1px);}
@@ -722,7 +721,7 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
 .msg-close{margin-left:auto;background:rgba(255,255,255,.1);border:none;border-radius:50%;width:24px;height:24px;color:#fff;font-size:.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
 /* TOAST */
-.toast{position:fixed;bottom:calc(var(--safe-bottom)+.85rem);left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;border-radius:10px;padding:.48rem 1.2rem;font-size:.72rem;font-weight:700;box-shadow:var(--sh4);z-index:8000;transition:opacity .3s ease,visibility .3s ease;pointer-events:none;white-space:nowrap;opacity:0;visibility:hidden;}
+.toast{position:fixed;bottom:calc(var(--safe-bottom)+.85rem);left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;border-radius:10px;padding:.48rem 1.2rem;font-size:.72rem;font-weight:700;box-shadow:var(--sh4);z-index:8000;pointer-events:none;white-space:nowrap;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease;}
 .toast.show{opacity:1;visibility:visible;}
 
 /* EMPTY */
@@ -1031,6 +1030,7 @@ html,body{height:100%;width:100%;font-family:'Sora',sans-serif;background:#fffff
       <button class="sab bdep" id="sDep" onclick="markSt(_drKey,'departed')"><span class="sab-ico">🛫</span><span class="sab-lbl">Departed</span></button>
       <button class="sab brt"  id="sRt"  onclick="markSt(_drKey,'pending')"><span class="sab-ico">⏳</span><span class="sab-lbl">En Route</span></button>
       <button class="sab bns"  id="sNs"  onclick="markSt(_drKey,'no-show')"><span class="sab-ico">❌</span><span class="sab-lbl">No Show</span></button>
+      <button class="sab brst" id="sRst" onclick="markSt(_drKey,'none')"><span class="sab-ico">⬜</span><span class="sab-lbl">Reset</span></button>
     </div>
     <div class="dr-sec-title" style="margin-top:.45rem">Quick Contact</div>
     <div class="cacts">
@@ -1204,14 +1204,12 @@ function bootApp(){
   const fnm=document.getElementById('fNm');if(fnm)fnm.textContent=u.name||'ProtoDesk';
 
   if(role.mobile){
-    // Driver only → mobile field screen
     initFieldScreen();
     showScreen('s-field');
     const savedEid=localStorage.getItem('pd_lastEvent_'+u.uid);
     const eid=(savedEid&&window._events[savedEid])?savedEid:(u.assignedEventId||Object.keys(window._events)[0]);
     if(eid&&window._events[eid]){selectEvent(eid);}
   } else {
-    // Desktop roles → desktop app
     buildNav();
     showScreen('s-desktop');
     const savedEid=localStorage.getItem('pd_lastEvent_'+u.uid);
@@ -1219,19 +1217,13 @@ function bootApp(){
     if(eid&&window._events[eid]){
       selectEvent(eid);
     } else {
-      // Events may not have loaded yet — wait up to 2 seconds then show modal
       let waited=0;
       const waitForEvents=setInterval(()=>{
         waited+=200;
         const sv=localStorage.getItem('pd_lastEvent_'+u.uid);
         const e2=(sv&&window._events[sv])?sv:(u.assignedEventId||Object.keys(window._events)[0]);
-        if(e2&&window._events[e2]){
-          clearInterval(waitForEvents);
-          selectEvent(e2);
-        } else if(waited>=2000){
-          clearInterval(waitForEvents);
-          openEvtModal();
-        }
+        if(e2&&window._events[e2]){clearInterval(waitForEvents);selectEvent(e2);}
+        else if(waited>=2000){clearInterval(waitForEvents);openEvtModal();}
       },200);
     }
   }
@@ -2208,7 +2200,7 @@ function openDrw(key){
   const u2=window._cu;
   const isMyGuest=can('allg')||(u2.assignedSl===key);
   const canSt=can('status')&&isMyGuest;
-  ['sArr','sDep','sRt','sNs'].forEach(id=>{const b=document.getElementById(id);if(b){b.disabled=!canSt;b.style.opacity=canSt?'1':'0.35';}});
+  ['sArr','sDep','sRt','sNs','sRst'].forEach(id=>{const b=document.getElementById(id);if(b){b.disabled=!canSt;b.style.opacity=canSt?'1':'0.35';}});
   document.getElementById('noteInp').disabled=!can('note')||!isMyGuest;
   document.querySelector('.notesave').disabled=!can('note')||!isMyGuest;
   const actSec=document.getElementById('drActSec');
@@ -2458,10 +2450,14 @@ function showToast(msg,duration=2800){
   let el=document.getElementById('toast');
   if(!el){el=document.createElement('div');el.id='toast';el.className='toast';document.body.appendChild(el);}
   el.textContent=msg;
+  el.style.opacity='';el.style.visibility='';
   el.classList.remove('show');
   void el.offsetWidth;
   el.classList.add('show');
-  window._toastTimer=setTimeout(()=>{const t=document.getElementById('toast');if(t)t.classList.remove('show');},duration);
+  window._toastTimer=setTimeout(()=>{
+    const t=document.getElementById('toast');
+    if(t){t.classList.remove('show');t.style.opacity='0';t.style.visibility='hidden';}
+  },duration);
 }
 
 /* ── FULLSCREEN PHOTO VIEWER ── */
