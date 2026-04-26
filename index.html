@@ -1568,8 +1568,16 @@ function buildDash(){
   // Flight timeline
   const grps={};
   glist.forEach(g=>{if(!g.arrFlight)return;const k=`${g.arrDate||''}||${g.arrFlight}||${g.arrTime||''}`;if(!grps[k])grps[k]={d:g.arrDate||'',f:g.arrFlight,t:g.arrTime||'',n:0,tp:'arr'};grps[k].n++;});
-  const parseD=d=>{const p=(d||'').split('/');return p.length===3?p[2]+p[1].padStart(2,'0')+p[0].padStart(2,'0'):'99999999';};
-  const fls=Object.values(grps).sort((a,b)=>{const dc=parseD(a.d).localeCompare(parseD(b.d));return dc!==0?dc:a.t.localeCompare(b.t);});
+  const parseDateSort=d=>{
+    if(!d)return'99999999';
+    // yyyy-mm-dd or yyyy/mm/dd
+    if(/^\d{4}[-\/]\d{2}[-\/]\d{2}$/.test(d))return d.replace(/[-\/]/g,'');
+    // dd/mm/yyyy or dd-mm-yyyy
+    const p=d.split(/[\/\-\.]/);
+    if(p.length===3&&p[2].length===4)return p[2]+p[1].padStart(2,'0')+p[0].padStart(2,'0');
+    return'99999999';
+  };
+  const fls=Object.values(grps).sort((a,b)=>{const dc=parseDateSort(a.d).localeCompare(parseDateSort(b.d));return dc!==0?dc:(a.t||'').localeCompare(b.t||'');});
   const ft=document.createElement('div');ft.className='sec';
   ft.innerHTML=`<div class="sec-head"><div class="sec-title">Travel Schedule</div></div>
   <div class="sec-body"><div style="display:flex;flex-direction:column;gap:.32rem">${fls.length?fls.map(f=>`<div style="display:flex;align-items:center;gap:.52rem;padding:.5rem .7rem;border-radius:8px;background:var(--bg);border:1px solid var(--border)"><span style="font-family:'DM Mono',monospace;font-size:.74rem;font-weight:600;color:var(--ink);width:38px;flex-shrink:0">${f.t}</span><div style="flex:1"><div style="font-size:.68rem;font-weight:700">${f.f}</div><div style="font-size:.55rem;color:var(--ink4)">${f.d}</div></div><span style="font-size:.56rem;font-weight:800;padding:2px 7px;border-radius:20px;background:var(--gbg);color:var(--green);border:1px solid var(--gbd)">${f.n} arriving</span></div>`).join(''):'<div class="empty"><div class="ei">✈</div><p style="font-size:.7rem">No travel details entered</p></div>'}</div></div>`;
@@ -2081,7 +2089,16 @@ function renderUserTable(){
 
 function updateRole(uid,role){if(!window._fbReady){showToast('Firebase required');return;}window._update(window._ref(window._db,`users/${uid}`),{role});showToast('✅ Role updated');}
 function updateAssigned(uid,sl){if(!window._fbReady){showToast('Firebase required');return;}window._update(window._ref(window._db,`users/${uid}`),{assignedSl:sl||null});showToast('✅ Updated');}
-function deleteUser(uid){if(!confirm('Delete user?'))return;if(!window._fbReady){showToast('Firebase required');return;}window._remove(window._ref(window._db,`users/${uid}`));showToast('🗑 Removed');}
+function deleteUser(uid){
+  if(!confirm('Delete user? This will remove their login access permanently.'))return;
+  if(!window._fbReady){showToast('Firebase required');return;}
+  // Remove from Realtime Database
+  window._remove(window._ref(window._db,`users/${uid}`));
+  // Also remove from Firebase Auth if this is the current user (only possible for own account)
+  // For other users, we mark them as deleted in DB — Auth account remains but profile is gone
+  showToast('🗑 User removed');
+  renderUserTable();
+}
 /* Auto-generate login ID from name */
 function autoGenEmail(){
   // Login ID is now mobile number — auto-fill when mobile is typed
@@ -2683,9 +2700,16 @@ async function bulkCreateUsers(){
         uid=cred.user.uid;
       }catch(createErr){
         if(createErr.code==='auth/email-already-in-use'){
-          // Account exists in Auth but was deleted from DB — sign in to get uid
-          const cred2=await window._fbSignIn(window._auth,r.loginId,r.pwd);
-          uid=cred2.user.uid;
+          // Auth account exists — find its uid from DB by loginId match
+          const snap=await window._get(window._ref(window._db,'users'));
+          const allUsers=snap.val()||{};
+          const existing=Object.entries(allUsers).find(([k,v])=>v.loginId===r.loginId||v.email===r.loginId);
+          if(existing){
+            uid=existing[0];
+          } else {
+            // Can't recover uid — mark as needs manual delete from Firebase Console
+            throw new Error('Auth account exists but cannot recover — delete from Firebase Console');
+          }
         } else {
           throw createErr;
         }
