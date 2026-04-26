@@ -1434,7 +1434,7 @@ function openGF(key=null){
       <div class="form-group"><label class="flabel">State / Region</label><input class="finput" id="gf-state" value="${v.state||''}"></div>
       <div class="form-group"><label class="flabel">Contact</label><input class="finput" id="gf-contact" value="${v.contact||''}" type="tel"></div>
       <div class="form-group"><label class="flabel">Companion?</label><select class="fsel" id="gf-comp"><option value="">No companion</option><option value="1"${v.companion?' selected':''}>+1 companion</option></select></div>
-      <div class="form-group"><label class="flabel">Wikipedia key (for photo)</label><input class="finput" id="gf-wk" value="${v.wk||''}" placeholder="e.g. Dola_Sen"></div>
+      <div class="form-group"><label class="flabel">Wikipedia link or key (for photo)</label><input class="finput" id="gf-wk" value="${v.wk||''}" placeholder="Paste full URL or just the key e.g. Dola_Sen"></div>
       <div class="form-group full"><label class="flabel">Upload Photo (will show on card)</label>
         <div style="display:flex;align-items:center;gap:.65rem;flex-wrap:wrap">
           <label style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;font-size:.72rem;font-weight:700;color:var(--ink2)">
@@ -1501,7 +1501,8 @@ function previewGuestPhoto(input){
 function saveGuest(){
   const name=document.getElementById('gf-name').value.trim();
   if(!name){showToast('Name required');return;}
-  const wk=document.getElementById('gf-wk').value.trim();
+  const wkRaw=document.getElementById('gf-wk').value.trim();
+  const wk=wkRaw.replace(/^https?:\/\/(www\.)?[a-z]+\.wikipedia\.org\/wiki\//i,'').trim();
   const photoUrl=window._pendingPhoto||(_gfEditKey?window._guests[_gfEditKey]?.photoUrl:'');
   window._pendingPhoto=null;
   const g={name,category:document.getElementById('gf-cat').value,designation:document.getElementById('gf-desig').value.trim(),party:document.getElementById('gf-party').value.trim(),state:document.getElementById('gf-state').value.trim(),contact:document.getElementById('gf-contact').value.trim(),companion:!!document.getElementById('gf-comp').value,wk,wiki:wk?`https://en.wikipedia.org/wiki/${wk}`:'',photoUrl:photoUrl||'',mode:document.getElementById('gf-mode').value,arrDate:document.getElementById('gf-arrdate').value.trim(),arrFlight:document.getElementById('gf-arrflight').value.trim(),arrTime:document.getElementById('gf-arrtime').value.trim(),depDate:document.getElementById('gf-depdate').value.trim(),depFlight:document.getElementById('gf-depflight').value.trim(),depTime:document.getElementById('gf-deptime').value.trim(),car:document.getElementById('gf-car').value.trim(),room:document.getElementById('gf-room').value.trim(),driver:document.getElementById('gf-driver').value.trim(),driverMob:document.getElementById('gf-drivermob').value.trim(),proto:document.getElementById('gf-proto').value.trim(),protoMob:document.getElementById('gf-protomob').value.trim(),special:document.getElementById('gf-special').value.trim()};
